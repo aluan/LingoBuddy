@@ -1,0 +1,349 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		2F4A5A2477D2590BEF2F4550 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BFA79BA3E3AA48031181C445 /* Assets.xcassets */; };
+		400CB3A902507566E6D8A28E /* AppRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4075572E9AC30169D5E1D1E /* AppRootView.swift */; };
+		4A49BDEBC7259ACE16ADB9EC /* home.png in Resources */ = {isa = PBXBuildFile; fileRef = 5F613CF9FDC80328EAD082DD /* home.png */; };
+		6414D5F8A011C54FB4302990 /* DesignImageBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28FE0E08B3AB3B9DBA41D17 /* DesignImageBackground.swift */; };
+		7D452CDEDB262B684FC0BDBA /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62993341DD2A75B0E5C44BA1 /* HomeView.swift */; };
+		9C08FCFE8DCD9A614E01CFC2 /* SpeakView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A1FCC1AEF00745CE00EE72 /* SpeakView.swift */; };
+		B1073205D66815E3AA8BEED2 /* LingoBuddyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B518445913F5E022D367D6 /* LingoBuddyApp.swift */; };
+		FF743CD5F5EA712EB58F2ABF /* speak.png in Resources */ = {isa = PBXBuildFile; fileRef = 09CE0A9CEFAE850B184718C6 /* speak.png */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		09CE0A9CEFAE850B184718C6 /* speak.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = speak.png; sourceTree = "<group>"; };
+		48B518445913F5E022D367D6 /* LingoBuddyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LingoBuddyApp.swift; sourceTree = "<group>"; };
+		5F613CF9FDC80328EAD082DD /* home.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = home.png; sourceTree = "<group>"; };
+		62993341DD2A75B0E5C44BA1 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		822996F6DEFA88EB930B4349 /* LingoBuddy.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LingoBuddy.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A28FE0E08B3AB3B9DBA41D17 /* DesignImageBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignImageBackground.swift; sourceTree = "<group>"; };
+		B1A1FCC1AEF00745CE00EE72 /* SpeakView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakView.swift; sourceTree = "<group>"; };
+		B652533A8F4EE4E79D8201F4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		BFA79BA3E3AA48031181C445 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C4075572E9AC30169D5E1D1E /* AppRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		1A66B157F1F4B4331314F494 /* Images */ = {
+			isa = PBXGroup;
+			children = (
+				5F613CF9FDC80328EAD082DD /* home.png */,
+				09CE0A9CEFAE850B184718C6 /* speak.png */,
+			);
+			path = Images;
+			sourceTree = "<group>";
+		};
+		8470825A9FBEF672C4F99E7D /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A28FE0E08B3AB3B9DBA41D17 /* DesignImageBackground.swift */,
+				62993341DD2A75B0E5C44BA1 /* HomeView.swift */,
+				B1A1FCC1AEF00745CE00EE72 /* SpeakView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		B709BFDFC3DECA396F5FB54B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				822996F6DEFA88EB930B4349 /* LingoBuddy.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		BB7595C5E23B0970029E93A0 /* LingoBuddyApp */ = {
+			isa = PBXGroup;
+			children = (
+				C4075572E9AC30169D5E1D1E /* AppRootView.swift */,
+				BFA79BA3E3AA48031181C445 /* Assets.xcassets */,
+				B652533A8F4EE4E79D8201F4 /* Info.plist */,
+				48B518445913F5E022D367D6 /* LingoBuddyApp.swift */,
+				8470825A9FBEF672C4F99E7D /* Views */,
+			);
+			path = LingoBuddyApp;
+			sourceTree = "<group>";
+		};
+		FF0509CBFE242B3B2A2F0767 = {
+			isa = PBXGroup;
+			children = (
+				1A66B157F1F4B4331314F494 /* Images */,
+				BB7595C5E23B0970029E93A0 /* LingoBuddyApp */,
+				B709BFDFC3DECA396F5FB54B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		3E4A0D881B81B7244669297E /* LingoBuddy */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9350ECE49848243186C57C06 /* Build configuration list for PBXNativeTarget "LingoBuddy" */;
+			buildPhases = (
+				C6AB5D147149B57B6347866D /* Sources */,
+				D5CA8767BE32CD14D17FC836 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LingoBuddy;
+			packageProductDependencies = (
+			);
+			productName = LingoBuddy;
+			productReference = 822996F6DEFA88EB930B4349 /* LingoBuddy.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6E1775197CBC8DE2C3798C06 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					3E4A0D881B81B7244669297E = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = E660F806C064A4D0990374DF /* Build configuration list for PBXProject "LingoBuddy" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = FF0509CBFE242B3B2A2F0767;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = B709BFDFC3DECA396F5FB54B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				3E4A0D881B81B7244669297E /* LingoBuddy */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D5CA8767BE32CD14D17FC836 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2F4A5A2477D2590BEF2F4550 /* Assets.xcassets in Resources */,
+				4A49BDEBC7259ACE16ADB9EC /* home.png in Resources */,
+				FF743CD5F5EA712EB58F2ABF /* speak.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C6AB5D147149B57B6347866D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				400CB3A902507566E6D8A28E /* AppRootView.swift in Sources */,
+				6414D5F8A011C54FB4302990 /* DesignImageBackground.swift in Sources */,
+				7D452CDEDB262B684FC0BDBA /* HomeView.swift in Sources */,
+				B1073205D66815E3AA8BEED2 /* LingoBuddyApp.swift in Sources */,
+				9C08FCFE8DCD9A614E01CFC2 /* SpeakView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		01A0CED9CFF64F7793F09918 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				INFOPLIST_FILE = LingoBuddyApp/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.aluan.LingoBuddy;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		38D254A54E0896B962BAF0CF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		80623FC232733A0B1713D9A5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				INFOPLIST_FILE = LingoBuddyApp/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.aluan.LingoBuddy;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		C9A6455271E745E0C87A1F67 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		9350ECE49848243186C57C06 /* Build configuration list for PBXNativeTarget "LingoBuddy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				01A0CED9CFF64F7793F09918 /* Debug */,
+				80623FC232733A0B1713D9A5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E660F806C064A4D0990374DF /* Build configuration list for PBXProject "LingoBuddy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				38D254A54E0896B962BAF0CF /* Debug */,
+				C9A6455271E745E0C87A1F67 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 6E1775197CBC8DE2C3798C06 /* Project object */;
+}

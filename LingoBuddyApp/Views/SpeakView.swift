@@ -19,9 +19,9 @@ enum VoiceInteractionState: CaseIterable {
     var icon: String {
         switch self {
         case .listening:
-            "ear"
+            "phone.fill"
         case .thinking:
-            "sparkles"
+            "phone.connection.fill"
         case .speaking:
             "waveform"
         }
@@ -31,116 +31,222 @@ enum VoiceInteractionState: CaseIterable {
 struct SpeakView: View {
     let onBack: () -> Void
     @StateObject private var realtime = VoiceRealtimeClient()
-    @State private var pulse = false
+
+    private let pageGradient = LinearGradient(
+        colors: [
+            Color(red: 0.95, green: 0.99, blue: 0.96),
+            Color(red: 0.82, green: 0.94, blue: 0.98)
+        ],
+        startPoint: .top,
+        endPoint: .bottom
+    )
 
     var body: some View {
-        GeometryReader { proxy in
-            ZStack {
-                DesignImageBackground(imageName: "speak")
+        ZStack {
+            pageGradient.ignoresSafeArea()
 
-                Button(action: onBack) {
-                    Circle().fill(Color.white.opacity(0.001))
+            VStack(spacing: 18) {
+                topBar
+
+                statusCard
+
+                VStack(spacing: 12) {
+                    transcriptBubble(
+                        label: "You",
+                        text: realtime.childTranscript,
+                        icon: "person.fill",
+                        tint: Color(red: 0.10, green: 0.45, blue: 0.74)
+                    )
+
+                    transcriptBubble(
+                        label: "Astra",
+                        text: realtime.astraReply,
+                        icon: "sparkles",
+                        tint: Color(red: 0.86, green: 0.38, blue: 0.18)
+                    )
                 }
-                .buttonStyle(.plain)
-                .frame(width: proxy.size.width * 0.16, height: proxy.size.width * 0.16)
-                .contentShape(Circle())
-                .position(x: proxy.size.width * 0.09, y: proxy.size.height * 0.075)
-                .accessibilityLabel("Back to home")
 
-                Text("\(realtime.totalStars) stars")
-                    .font(.system(size: 24, weight: .heavy, design: .rounded))
-                    .foregroundStyle(Color(red: 0.28, green: 0.15, blue: 0.07))
-                    .shadow(color: .white.opacity(0.65), radius: 1, x: 0, y: 1)
-                    .position(x: proxy.size.width * 0.73, y: proxy.size.height * 0.076)
+                Spacer(minLength: 8)
 
-                transcriptBubble(
-                    label: "Child",
-                    text: realtime.childTranscript,
-                    accent: Color(red: 0.07, green: 0.42, blue: 0.74),
-                    textColor: Color(red: 0.04, green: 0.35, blue: 0.66)
-                )
-                .frame(width: proxy.size.width * 0.68)
-                .position(x: proxy.size.width * 0.55, y: proxy.size.height * 0.50)
+                callControls
 
-                transcriptBubble(
-                    label: "Astra",
-                    text: realtime.astraReply,
-                    accent: Color(red: 0.96, green: 0.35, blue: 0.16),
-                    textColor: Color(red: 0.80, green: 0.22, blue: 0.06)
-                )
-                .frame(width: proxy.size.width * 0.72)
-                .position(x: proxy.size.width * 0.57, y: proxy.size.height * 0.60)
+                Text(statusHint)
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
 
-                statusPill
-                    .frame(width: proxy.size.width * 0.39, height: proxy.size.height * 0.052)
-                    .position(x: proxy.size.width * 0.50, y: proxy.size.height * 0.706)
+                connectionDebug
 
-                Button(action: realtime.microphoneTapped) {
-                    ZStack {
-                        Circle()
-                            .stroke(Color.white.opacity(0.45), lineWidth: 3)
-                            .scaleEffect(pulse ? 1.26 : 0.92)
-                            .opacity(pulse ? 0.05 : 0.65)
-
-                        Circle()
-                            .fill(Color.white.opacity(0.001))
-                    }
+                if realtime.isInCall {
+                    audioDebug
                 }
-                .buttonStyle(.plain)
-                .frame(width: proxy.size.width * 0.36, height: proxy.size.width * 0.36)
-                .contentShape(Circle())
-                .position(x: proxy.size.width * 0.50, y: proxy.size.height * 0.828)
-                .accessibilityLabel("Microphone")
-                .accessibilityHint("Tap to send a voice turn to Astra")
 
                 if let error = realtime.errorMessage {
                     Text(error)
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
-                        .lineLimit(2)
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundStyle(Color(red: 0.72, green: 0.12, blue: 0.10))
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 9)
+                        .lineLimit(3)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity)
                         .background(
-                            Capsule()
-                                .fill(Color.red.opacity(0.78))
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .fill(Color(red: 1.0, green: 0.91, blue: 0.89))
                         )
-                        .frame(width: proxy.size.width * 0.74)
-                        .position(x: proxy.size.width * 0.5, y: proxy.size.height * 0.94)
-                }
-
-                rewardTapTarget(in: proxy)
-            }
-            .onAppear {
-                realtime.connect()
-                withAnimation(.easeInOut(duration: 1.15).repeatForever(autoreverses: false)) {
-                    pulse = true
                 }
             }
-            .onDisappear {
-                realtime.disconnect()
-            }
+            .padding(.horizontal, 20)
+            .padding(.top, 12)
+            .padding(.bottom, 26)
         }
-        .ignoresSafeArea()
+        .onDisappear {
+            realtime.endCall()
+        }
     }
 
-    private var statusPill: some View {
-        HStack(spacing: 9) {
-            Image(systemName: voiceState.icon)
-                .font(.system(size: 22, weight: .bold))
-            Text(voiceState.title)
-                .font(.system(size: 27, weight: .heavy, design: .rounded))
+    private var topBar: some View {
+        HStack(spacing: 12) {
+            Button(action: onBack) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
+                    .frame(width: 42, height: 42)
+                    .background(Circle().fill(.white.opacity(0.78)))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Back to home")
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Talk with Astra")
+                    .font(.system(size: 23, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
+                Text("Live voice call")
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Label("\(realtime.totalStars)", systemImage: "star.fill")
+                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .foregroundStyle(Color(red: 0.73, green: 0.41, blue: 0.05))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 9)
+                .background(Capsule().fill(Color(red: 1.0, green: 0.92, blue: 0.75)))
+                .accessibilityLabel("\(realtime.totalStars) stars")
         }
-        .foregroundStyle(.white)
-        .shadow(color: .black.opacity(0.22), radius: 2, x: 0, y: 2)
-        .padding(.horizontal, 18)
-        .padding(.vertical, 8)
+    }
+
+    private var statusCard: some View {
+        HStack(spacing: 14) {
+            Image(systemName: voiceState.icon)
+                .font(.system(size: 20, weight: .bold))
+                .foregroundStyle(statusColor)
+                .frame(width: 44, height: 44)
+                .background(Circle().fill(statusColor.opacity(0.13)))
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(voiceState.title)
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
+                Text(statusDescription)
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+        }
+        .padding(16)
         .background(
-            Capsule()
-                .fill(statusColor)
-                .shadow(color: statusColor.opacity(0.58), radius: 14, x: 0, y: 0)
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(.white.opacity(0.78))
         )
-        .animation(.spring(response: 0.25, dampingFraction: 0.82), value: voiceState)
+        .animation(.spring(response: 0.25, dampingFraction: 0.84), value: voiceState)
+    }
+
+    private var callControls: some View {
+        HStack(spacing: 14) {
+            Button(action: realtime.startCall) {
+                Label("Start Call", systemImage: "phone.fill")
+                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 58)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .fill(Color(red: 0.13, green: 0.53, blue: 0.45))
+                    )
+            }
+            .buttonStyle(.plain)
+            .disabled(realtime.isInCall || realtime.isStartingCall)
+            .opacity(realtime.isInCall || realtime.isStartingCall ? 0.42 : 1)
+            .accessibilityLabel("Start call")
+
+            Button(action: realtime.endCall) {
+                Label("End Call", systemImage: "phone.down.fill")
+                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 58)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .fill(Color(red: 0.78, green: 0.16, blue: 0.12))
+                    )
+            }
+            .buttonStyle(.plain)
+            .disabled(!realtime.isInCall && !realtime.isStartingCall)
+            .opacity(!realtime.isInCall && !realtime.isStartingCall ? 0.42 : 1)
+            .accessibilityLabel("End call")
+        }
+    }
+
+    private var connectionDebug: some View {
+        HStack(spacing: 7) {
+            Circle()
+                .fill(realtime.isConnected ? Color(red: 0.13, green: 0.53, blue: 0.45) : Color(red: 0.86, green: 0.52, blue: 0.14))
+                .frame(width: 8, height: 8)
+
+            Text(realtime.currentEndpoint)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(.white.opacity(0.56))
+        )
+        .accessibilityLabel("Voice server \(realtime.currentEndpoint)")
+    }
+
+    private var audioDebug: some View {
+        HStack(spacing: 10) {
+            Text("Audio in \(realtime.audioChunksSent) / out \(realtime.audioChunksReceived)")
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(.secondary)
+
+            GeometryReader { proxy in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color.black.opacity(0.08))
+                    Capsule()
+                        .fill(Color(red: 0.13, green: 0.53, blue: 0.45))
+                        .frame(width: max(6, proxy.size.width * realtime.inputLevel))
+                }
+            }
+            .frame(height: 8)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(.white.opacity(0.56))
+        )
+        .accessibilityLabel("Sent \(realtime.audioChunksSent) audio chunks and received \(realtime.audioChunksReceived)")
     }
 
     private var voiceState: VoiceInteractionState {
@@ -150,52 +256,63 @@ struct SpeakView: View {
     private var statusColor: Color {
         switch voiceState {
         case .listening:
-            Color(red: 0.13, green: 0.65, blue: 0.30)
+            Color(red: 0.13, green: 0.53, blue: 0.45)
         case .thinking:
-            Color(red: 0.94, green: 0.54, blue: 0.15)
+            Color(red: 0.86, green: 0.52, blue: 0.14)
         case .speaking:
-            Color(red: 0.12, green: 0.53, blue: 0.90)
+            Color(red: 0.12, green: 0.45, blue: 0.78)
         }
     }
 
-    private func rewardTapTarget(in proxy: GeometryProxy) -> some View {
-        Button(action: {}) {
-            Rectangle().fill(Color.white.opacity(0.001))
+    private var statusDescription: String {
+        switch voiceState {
+        case .listening:
+            realtime.isInCall ? "Astra can hear you now." : "Ready when you are."
+        case .thinking:
+            realtime.isStartingCall ? "Connecting the call." : "Astra is preparing a reply."
+        case .speaking:
+            "Listen, then answer back."
         }
-        .buttonStyle(.plain)
-        .frame(width: proxy.size.width * 0.22, height: proxy.size.height * 0.11)
-        .contentShape(Rectangle())
-        .position(x: proxy.size.width * 0.88, y: proxy.size.height * 0.87)
-        .accessibilityLabel("Star rewards")
     }
 
-    private func transcriptBubble(label: String, text: String, accent: Color, textColor: Color) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(label)
-                .font(.system(size: 15, weight: .heavy, design: .rounded))
-                .foregroundStyle(.white)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 5)
-                .background(
-                    Capsule()
-                        .fill(accent)
-                        .shadow(color: .black.opacity(0.18), radius: 4, x: 0, y: 2)
-                )
+    private var statusHint: String {
+        if realtime.isStartingCall {
+            return "Starting live call..."
+        }
+
+        if realtime.isInCall {
+            return realtime.isRecording ? "Live call is on" : "Call connected, preparing microphone"
+        }
+
+        return "Tap Start Call to begin"
+    }
+
+    private func transcriptBubble(label: String, text: String, icon: String, tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 13, weight: .bold))
+                Text(label)
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+            }
+            .foregroundStyle(tint)
 
             Text(text)
-                .font(.system(size: 24, weight: .heavy, design: .rounded))
-                .foregroundStyle(textColor)
-                .lineLimit(2)
-                .minimumScaleFactor(0.72)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 15)
+                .font(.system(size: 21, weight: .semibold, design: .rounded))
+                .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
+                .lineLimit(3)
+                .minimumScaleFactor(0.78)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .fill(Color.white.opacity(0.92))
-                        .shadow(color: .black.opacity(0.18), radius: 8, x: 0, y: 4)
-                )
         }
+        .padding(18)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(.white.opacity(0.78))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(tint.opacity(0.12), lineWidth: 1)
+        )
     }
 }
 

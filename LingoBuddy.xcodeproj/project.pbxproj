@@ -14,6 +14,7 @@
 		7D452CDEDB262B684FC0BDBA /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62993341DD2A75B0E5C44BA1 /* HomeView.swift */; };
 		9C08FCFE8DCD9A614E01CFC2 /* SpeakView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A1FCC1AEF00745CE00EE72 /* SpeakView.swift */; };
 		B1073205D66815E3AA8BEED2 /* LingoBuddyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B518445913F5E022D367D6 /* LingoBuddyApp.swift */; };
+		C92BB6E0F1C64C0FA7AC1731 /* VoiceRealtimeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92BB6DFF1C64C0FA7AC1731 /* VoiceRealtimeClient.swift */; };
 		FF743CD5F5EA712EB58F2ABF /* speak.png in Resources */ = {isa = PBXBuildFile; fileRef = 09CE0A9CEFAE850B184718C6 /* speak.png */; };
 /* End PBXBuildFile section */
 
@@ -22,12 +23,13 @@
 		48B518445913F5E022D367D6 /* LingoBuddyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LingoBuddyApp.swift; sourceTree = "<group>"; };
 		5F613CF9FDC80328EAD082DD /* home.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = home.png; sourceTree = "<group>"; };
 		62993341DD2A75B0E5C44BA1 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
-		822996F6DEFA88EB930B4349 /* LingoBuddy.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LingoBuddy.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		822996F6DEFA88EB930B4349 /* LingoBuddy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LingoBuddy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A28FE0E08B3AB3B9DBA41D17 /* DesignImageBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignImageBackground.swift; sourceTree = "<group>"; };
 		B1A1FCC1AEF00745CE00EE72 /* SpeakView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakView.swift; sourceTree = "<group>"; };
 		B652533A8F4EE4E79D8201F4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		BFA79BA3E3AA48031181C445 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C4075572E9AC30169D5E1D1E /* AppRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
+		C92BB6DFF1C64C0FA7AC1731 /* VoiceRealtimeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceRealtimeClient.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -65,9 +67,18 @@
 				BFA79BA3E3AA48031181C445 /* Assets.xcassets */,
 				B652533A8F4EE4E79D8201F4 /* Info.plist */,
 				48B518445913F5E022D367D6 /* LingoBuddyApp.swift */,
+				C92BB6E1F1C64C0FA7AC1731 /* Services */,
 				8470825A9FBEF672C4F99E7D /* Views */,
 			);
 			path = LingoBuddyApp;
+			sourceTree = "<group>";
+		};
+		C92BB6E1F1C64C0FA7AC1731 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				C92BB6DFF1C64C0FA7AC1731 /* VoiceRealtimeClient.swift */,
+			);
+			path = Services;
 			sourceTree = "<group>";
 		};
 		FF0509CBFE242B3B2A2F0767 = {
@@ -110,7 +121,6 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					3E4A0D881B81B7244669297E = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -157,6 +167,7 @@
 				7D452CDEDB262B684FC0BDBA /* HomeView.swift in Sources */,
 				B1073205D66815E3AA8BEED2 /* LingoBuddyApp.swift in Sources */,
 				9C08FCFE8DCD9A614E01CFC2 /* SpeakView.swift in Sources */,
+				C92BB6E0F1C64C0FA7AC1731 /* VoiceRealtimeClient.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -169,7 +180,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = Y4BL6BGSV3;
 				INFOPLIST_FILE = LingoBuddyApp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -252,7 +263,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = Y4BL6BGSV3;
 				INFOPLIST_FILE = LingoBuddyApp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

@@ -10,3 +10,11 @@ build/
 *.ipa
 *.dSYM.zip
 *.dSYM
+
+# Doubao SDK sensitive credentials
+LingoBuddyApp/Config/DoubaoConfig.swift
+
+# CocoaPods
+Pods/
+*.xcworkspace
+Podfile.lock

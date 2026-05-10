@@ -19,7 +19,8 @@ import { ConversationsService } from './conversations/conversations.service';
 import { HomeController } from './home/home.controller';
 import { ParentController } from './parent/parent.controller';
 import { ParentService } from './parent/parent.service';
-import { VoiceRealtimeServer } from './voice/voice-realtime.server';
+import { VoiceSessionController } from './voice/voice-session.controller';
+import { VoiceSessionService } from './voice/voice-session.service';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { VoiceRealtimeServer } from './voice/voice-realtime.server';
     RewardsController,
     HomeController,
     ParentController,
+    VoiceSessionController,
   ],
   providers: [
     ProfilesService,
@@ -55,7 +57,7 @@ import { VoiceRealtimeServer } from './voice/voice-realtime.server';
     RewardsService,
     ConversationsService,
     ParentService,
-    VoiceRealtimeServer,
+    VoiceSessionService,
   ],
 })
 export class AppModule {}

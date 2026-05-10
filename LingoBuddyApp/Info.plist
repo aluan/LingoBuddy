@@ -20,15 +20,21 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>LingoBuddy uses the microphone so children can speak with Astra.</string>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>LingoBuddy connects to the local development server for voice practice.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>LingoBuddy connects to the local development server for voice practice.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>LingoBuddy uses the microphone so children can speak with Astra.</string>
+	<key>DoubaoAddress</key>
+	<string>openspeech.bytedance.com</string>
+	<key>DoubaoBotName</key>
+	<string>Astra</string>
+	<key>BackendBaseURL</key>
+	<string>http://localhost:3000</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

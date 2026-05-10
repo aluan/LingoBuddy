@@ -1,0 +1,128 @@
+import { ConfigService } from '@nestjs/config';
+
+export type GlmVadMode = 'client' | 'server';
+export type GlmNoiseReduction = 'near_field' | 'far_field';
+
+export type GlmRealtimeConfig = {
+  model: string;
+  voice: string;
+  inputAudioFormat: string;
+  outputAudioFormat: string;
+  noiseReduction: GlmNoiseReduction;
+  betaFields: {
+    chat_mode: 'audio';
+    tts_source: 'e2e';
+    auto_search: boolean;
+  };
+  vadMode: GlmVadMode;
+  vadThreshold: number;
+  vadPrefixPaddingMs: number;
+  vadSilenceMs: number;
+  vadMinSpeechChunks: number;
+  vadMaxSpeechMs: number;
+};
+
+export type GlmSessionUpdate = {
+  model: string;
+  modalities: Array<'text' | 'audio'>;
+  instructions: string;
+  voice: string;
+  input_audio_format: string;
+  output_audio_format: string;
+  input_audio_noise_reduction: {
+    type: GlmNoiseReduction;
+  };
+  beta_fields: GlmRealtimeConfig['betaFields'];
+  turn_detection?: {
+    type: 'server_vad';
+    threshold: number;
+    prefix_padding_ms: number;
+    silence_duration_ms: number;
+    create_response: true;
+    interrupt_response: true;
+  };
+};
+
+const DEFAULTS = {
+  model: 'glm-realtime-flash',
+  voice: 'lovely_girl',
+  inputAudioFormat: 'pcm16(16000)',
+  outputAudioFormat: 'pcm',
+  noiseReduction: 'near_field' as GlmNoiseReduction,
+  vadMode: 'client' as GlmVadMode,
+  vadThreshold: 0.01,
+  vadPrefixPaddingMs: 300,
+  vadSilenceMs: 1_100,
+  vadMinSpeechChunks: 2,
+  vadMaxSpeechMs: 6_500,
+};
+
+export function buildGlmRealtimeConfig(config: ConfigService): GlmRealtimeConfig {
+  const vadMode = parseEnum(config.get<string>('GLM_VAD_MODE'), ['client', 'server'], DEFAULTS.vadMode);
+
+  return {
+    model: config.get<string>('GLM_REALTIME_MODEL') ?? DEFAULTS.model,
+    voice: config.get<string>('GLM_VOICE') ?? DEFAULTS.voice,
+    inputAudioFormat: config.get<string>('GLM_INPUT_AUDIO_FORMAT') ?? DEFAULTS.inputAudioFormat,
+    outputAudioFormat: config.get<string>('GLM_OUTPUT_AUDIO_FORMAT') ?? DEFAULTS.outputAudioFormat,
+    noiseReduction: parseEnum(config.get<string>('GLM_NOISE_REDUCTION'), ['near_field', 'far_field'], DEFAULTS.noiseReduction),
+    betaFields: {
+      chat_mode: 'audio',
+      tts_source: 'e2e',
+      auto_search: parseBoolean(config.get<string>('GLM_AUTO_SEARCH'), false),
+    },
+    vadMode,
+    vadThreshold: parseNumber(config.get<string>('GLM_VAD_THRESHOLD'), DEFAULTS.vadThreshold),
+    vadPrefixPaddingMs: parseNumber(config.get<string>('GLM_VAD_PREFIX_PADDING_MS'), DEFAULTS.vadPrefixPaddingMs),
+    vadSilenceMs: parseNumber(config.get<string>('GLM_VAD_SILENCE_MS'), DEFAULTS.vadSilenceMs),
+    vadMinSpeechChunks: Math.max(1, Math.trunc(parseNumber(config.get<string>('GLM_VAD_MIN_SPEECH_CHUNKS'), DEFAULTS.vadMinSpeechChunks))),
+    vadMaxSpeechMs: parseNumber(config.get<string>('GLM_VAD_MAX_SPEECH_MS'), DEFAULTS.vadMaxSpeechMs),
+  };
+}
+
+export function buildGlmSessionUpdate(config: GlmRealtimeConfig, instructions: string): GlmSessionUpdate {
+  return {
+    model: config.model,
+    modalities: ['text', 'audio'],
+    instructions,
+    voice: config.voice,
+    input_audio_format: config.inputAudioFormat,
+    output_audio_format: config.outputAudioFormat,
+    input_audio_noise_reduction: {
+      type: config.noiseReduction,
+    },
+    beta_fields: config.betaFields,
+    ...(config.vadMode === 'server'
+      ? {
+          turn_detection: {
+            type: 'server_vad',
+            threshold: config.vadThreshold,
+            prefix_padding_ms: config.vadPrefixPaddingMs,
+            silence_duration_ms: config.vadSilenceMs,
+            create_response: true as const,
+            interrupt_response: true as const,
+          },
+        }
+      : {}),
+  };
+}
+
+function parseBoolean(value: string | undefined, fallback: boolean): boolean {
+  if (value === undefined) return fallback;
+  const normalized = value.trim().toLowerCase();
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) return true;
+  if (['0', 'false', 'no', 'off'].includes(normalized)) return false;
+  return fallback;
+}
+
+function parseNumber(value: string | undefined, fallback: number): number {
+  if (value === undefined) return fallback;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function parseEnum<T extends string>(value: string | undefined, allowed: readonly T[], fallback: T): T {
+  if (!value) return fallback;
+  const normalized = value.trim() as T;
+  return allowed.includes(normalized) ? normalized : fallback;
+}

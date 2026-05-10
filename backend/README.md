@@ -7,8 +7,8 @@ NestJS backend for the LingoBuddy MVP.
 - NestJS
 - MongoDB
 - Redis
-- Raw WebSocket endpoint for realtime voice
-- Zhipu GLM-Realtime proxy with local mock fallback
+- REST API for voice session management
+- Doubao AI real-time voice (handled by iOS SDK)
 
 ## Local Setup
 
@@ -32,24 +32,13 @@ Default API URL:
 http://localhost:3000
 ```
 
-Realtime voice WebSocket:
-
-```text
-ws://localhost:3000/voice/realtime
-```
-
 ## Environment
 
 ```text
 PORT=3000
 MONGODB_URI=mongodb://localhost:27017/lingobuddy
 REDIS_URL=redis://localhost:6379
-ZHIPU_API_KEY=
-GLM_REALTIME_MODEL=glm-realtime-flash
-GLM_REALTIME_MOCK=true
 ```
-
-Set `GLM_REALTIME_MOCK=false` and provide `ZHIPU_API_KEY` to proxy real GLM-Realtime sessions.
 
 ## REST API
 
@@ -61,29 +50,40 @@ GET   /tasks/today
 POST  /tasks/:id/complete
 GET   /parent/summary?date=YYYY-MM-DD
 GET   /rewards
+
+POST  /voice/sessions/start
+POST  /voice/sessions/:sessionId/transcript
+POST  /voice/sessions/:sessionId/reward
+POST  /voice/sessions/:sessionId/end
 ```
 
-## WebSocket Protocol
+## Voice Session API
 
-iOS to backend:
-
+### Start Session
 ```json
-{ "type": "session.start" }
-{ "type": "audio.append", "audio": "<base64 pcm chunk>" }
-{ "type": "audio.stop" }
-{ "type": "response.cancel" }
-{ "type": "session.end" }
+POST /voice/sessions/start
+Body: { "taskId": "optional-task-id" }
+Response: { "sessionId": "uuid", "conversationId": "uuid", "taskId": "uuid" }
 ```
 
-Backend to iOS:
-
+### Save Transcript
 ```json
-{ "type": "state.changed", "state": "listening" }
-{ "type": "transcript.delta", "text": "I found a red apple!" }
-{ "type": "assistant.text.delta", "text": "Great job! Can you find something blue?" }
-{ "type": "assistant.audio.delta", "audio": "<base64 pcm chunk>" }
-{ "type": "reward.earned", "stars": 1, "totalStars": 18 }
-{ "type": "error", "message": "..." }
+POST /voice/sessions/:sessionId/transcript
+Body: { "text": "I found a red apple!", "role": "child" }
+Response: { "messageId": "uuid" }
+```
+
+### Grant Reward
+```json
+POST /voice/sessions/:sessionId/reward
+Body: { "stars": 1 }
+Response: { "totalStars": 18, "progress": { "speakingTurns": 5, "stars": 18 } }
+```
+
+### End Session
+```json
+POST /voice/sessions/:sessionId/end
+Response: { "conversationId": "uuid", "summary": "Session completed in 45 seconds" }
 ```
 
 ## Verification

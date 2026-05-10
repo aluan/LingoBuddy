@@ -2,7 +2,6 @@ import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { networkInterfaces } from 'node:os';
 import { AppModule } from './app.module';
-import { VoiceRealtimeServer } from './voice/voice-realtime.server';
 
 function getLanUrls(port: number): string[] {
   return Object.values(networkInterfaces())
@@ -14,7 +13,6 @@ function getLanUrls(port: number): string[] {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
-  const voiceServer = app.get(VoiceRealtimeServer);
   const port = config.get<number>('PORT') ?? 3000;
   const host = config.get<string>('HOST') ?? '0.0.0.0';
 
@@ -23,14 +21,10 @@ async function bootstrap() {
     credentials: true,
   });
 
-  voiceServer.attach(app.getHttpServer());
-
   await app.listen(port, host);
   console.log(`LingoBuddy API listening on http://${host}:${port}`);
-  console.log(`Realtime voice WebSocket listening on ws://${host}:${port}/voice/realtime`);
   for (const url of getLanUrls(port)) {
     console.log(`LAN API reachable at ${url}`);
-    console.log(`LAN voice WebSocket reachable at ${url.replace('http', 'ws')}/voice/realtime`);
   }
 }
 

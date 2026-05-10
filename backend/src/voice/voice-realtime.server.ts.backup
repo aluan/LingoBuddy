@@ -9,6 +9,7 @@ import { TasksService } from '../tasks/tasks.service';
 import { ProgressService } from '../progress/progress.service';
 import { ConversationsService } from '../conversations/conversations.service';
 import { RewardsService } from '../rewards/rewards.service';
+import { buildGlmRealtimeConfig, buildGlmSessionUpdate, type GlmRealtimeConfig } from './glm-session-config';
 
 type ClientEvent =
   | { type: 'session.start'; taskId?: string }
@@ -28,12 +29,14 @@ type GlmTurnState = {
   lastLocalSpeechAt: number;
   audioStartedAt: number;
   receivedAudioChunks: number;
+  consecutiveSpeechChunks: number;
 };
 
 @Injectable()
 export class VoiceRealtimeServer {
   private readonly logger = new Logger(VoiceRealtimeServer.name);
   private readonly wss = new WebSocketServer({ noServer: true });
+  private readonly glmConfig: GlmRealtimeConfig;
 
   constructor(
     private readonly config: ConfigService,
@@ -44,6 +47,7 @@ export class VoiceRealtimeServer {
     private readonly rewards: RewardsService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {
+    this.glmConfig = buildGlmRealtimeConfig(config);
     this.wss.on('connection', (socket) => {
       void this.handleClient(socket);
     });
@@ -80,6 +84,7 @@ export class VoiceRealtimeServer {
       lastLocalSpeechAt: 0,
       audioStartedAt: 0,
       receivedAudioChunks: 0,
+      consecutiveSpeechChunks: 0,
     };
 
     client.on('message', (data) => {
@@ -119,12 +124,16 @@ export class VoiceRealtimeServer {
             audioChunkCount += 1;
             glmState.receivedAudioChunks += 1;
             const level = this.pcmLevel(event.audio);
-            this.updateLocalVad(glm, glmState, level);
 
             if (audioChunkCount === 1 || audioChunkCount % 50 === 0) {
               this.logger.log(`voice ${sessionId}: forwarded ${audioChunkCount} audio chunks, level=${level.toFixed(4)}`);
             }
 
+            if (glmState.responseActive || glmState.responseRequested) {
+              return;
+            }
+
+            this.updateLocalVad(glm, glmState, level);
             glm.send(JSON.stringify({ type: 'input_audio_buffer.append', audio: event.audio }));
           }
           break;
@@ -170,7 +179,6 @@ export class VoiceRealtimeServer {
 
   private connectGlm(client: WebSocket, glmState: GlmTurnState, sessionId: string): WebSocket {
     const apiKey = this.config.get<string>('ZHIPU_API_KEY');
-    const model = this.config.get<string>('GLM_REALTIME_MODEL') ?? 'glm-realtime-flash';
     const url = 'wss://open.bigmodel.cn/api/paas/v4/realtime';
     const glm = new WebSocket(url, {
       headers: {
@@ -180,7 +188,6 @@ export class VoiceRealtimeServer {
 
     glm.on('open', () => {
       this.logger.log('GLM realtime socket open');
-      this.send(client, { type: 'state.changed', state: 'listening' });
     });
 
     glm.on('message', (raw) => {
@@ -194,21 +201,7 @@ export class VoiceRealtimeServer {
           event_id: crypto.randomUUID(),
           client_timestamp: Date.now(),
           type: 'session.update',
-          session: {
-            model,
-            modalities: ['audio', 'text'],
-            instructions: dinoPrompt(),
-            voice: 'lovely_girl',
-            input_audio_format: 'pcm16',
-            output_audio_format: 'pcm',
-            input_audio_noise_reduction: {
-              type: 'far_field',
-            },
-            beta_fields: {
-              chat_mode: 'audio',
-              tts_source: 'e2e',
-            },
-          },
+          session: buildGlmSessionUpdate(this.glmConfig, dinoPrompt()),
         }));
       }
     });
@@ -255,9 +248,12 @@ export class VoiceRealtimeServer {
 
     switch (event.type) {
     case 'session.created':
-    case 'session.updated':
       this.logger.log(`GLM event: ${event.type}`);
       return false;
+    case 'session.updated':
+      this.logger.log('GLM event: session.updated, audio session ready');
+      this.send(client, { type: 'state.changed', state: 'listening' });
+      return true;
     case 'input_audio_buffer.speech_started':
       this.logger.log('GLM event: speech_started');
       this.send(client, { type: 'state.changed', state: 'listening' });
@@ -265,7 +261,14 @@ export class VoiceRealtimeServer {
     case 'input_audio_buffer.speech_stopped':
       this.logger.log('GLM event: speech_stopped');
       this.send(client, { type: 'state.changed', state: 'thinking' });
-      this.requestGlmResponse(glm, state, 'glm_speech_stopped');
+      if (this.glmConfig.vadMode === 'server') {
+        state.responseRequested = true;
+      } else {
+        this.requestGlmResponse(glm, state, 'glm_speech_stopped');
+      }
+      return true;
+    case 'input_audio_buffer.committed':
+      this.logger.log(`GLM event: input_audio_buffer.committed ${this.safeStringify(event)}`);
       return true;
     case 'response.created':
       state.responseActive = true;
@@ -277,8 +280,15 @@ export class VoiceRealtimeServer {
       state.localSpeechStarted = false;
       state.audioStartedAt = 0;
       state.receivedAudioChunks = 0;
+      state.consecutiveSpeechChunks = 0;
       this.logger.log('GLM event: response.created');
       this.send(client, { type: 'state.changed', state: 'speaking' });
+      return true;
+    case 'response.output_item.added':
+    case 'response.output_item.done':
+    case 'response.content_part.added':
+    case 'response.content_part.done':
+      this.logger.log(`GLM event: ${event.type} ${this.safeStringify(event)}`);
       return true;
     case 'response.audio.delta':
       if (typeof event.delta !== 'string' && typeof event.audio !== 'string') {
@@ -315,17 +325,30 @@ export class VoiceRealtimeServer {
       state.responseTextChunkCount += 1;
       this.send(client, { type: 'assistant.text.delta', text: event.delta, isDelta: true });
       return true;
+    case 'response.text.done':
+      state.responseHadOutput = true;
+      if (typeof event.text === 'string') {
+        this.logger.log(`GLM text done: ${event.text}`);
+        this.send(client, { type: 'assistant.text.delta', text: event.text });
+      }
+      return true;
     case 'conversation.item.input_audio_transcription.completed':
       this.logger.log(`GLM transcript: ${event.transcript ?? ''}`);
       this.send(client, { type: 'transcript.delta', text: event.transcript });
       return true;
+    case 'conversation.item.input_audio_transcription.failed':
+      this.logger.warn(`GLM transcription failed: ${this.safeStringify(event)}`);
+      return true;
     case 'response.done':
       state.responseActive = false;
       state.responseRequested = false;
+      state.localSpeechStarted = false;
+      state.lastLocalSpeechAt = 0;
       state.audioStartedAt = 0;
       state.receivedAudioChunks = 0;
+      state.consecutiveSpeechChunks = 0;
       this.logger.log(
-        `GLM event: response.done, audioDeltas=${state.responseAudioChunkCount}, audioBytes=${state.responseAudioByteCount}`,
+        `GLM event: response.done, audioDeltas=${state.responseAudioChunkCount}, audioBytes=${state.responseAudioByteCount}, payload=${this.safeStringify(event)}`,
       );
       if (!state.responseHadOutput) {
         this.send(client, { type: 'assistant.text.delta', text: "I didn't catch that. Try one more time." });
@@ -333,12 +356,17 @@ export class VoiceRealtimeServer {
       this.send(client, { type: 'state.changed', state: 'listening' });
       return true;
     case 'response.audio.done':
+      state.localSpeechStarted = false;
+      state.lastLocalSpeechAt = 0;
+      state.consecutiveSpeechChunks = 0;
       this.send(client, { type: 'state.changed', state: 'listening' });
       return true;
     case 'error':
+      this.logger.error(`GLM error event: ${this.safeStringify(event)}`);
       this.send(client, { type: 'error', message: this.extractGlmErrorMessage(event.error) });
       return true;
     default:
+      this.logger.log(`GLM unhandled event: ${event.type ?? 'unknown'} ${this.safeStringify(event)}`);
       this.send(client, { type: 'glm.event', event });
       return false;
     }
@@ -346,40 +374,49 @@ export class VoiceRealtimeServer {
 
   private updateLocalVad(glm: WebSocket, state: GlmTurnState, level: number) {
     const now = Date.now();
-    const speechThreshold = 0.004;
-    const silenceMs = 900;
-    const lowLevelFallbackChunks = 24;
+
+    if (state.responseActive || state.responseRequested) {
+      state.localSpeechStarted = false;
+      state.lastLocalSpeechAt = 0;
+      state.consecutiveSpeechChunks = 0;
+      return;
+    }
 
     if (state.audioStartedAt === 0) {
       state.audioStartedAt = now;
     }
 
-    if (level >= speechThreshold) {
-      state.localSpeechStarted = true;
+    if (level >= this.glmConfig.vadThreshold) {
+      state.consecutiveSpeechChunks += 1;
       state.lastLocalSpeechAt = now;
-      if (!state.responseActive) {
-        state.responseRequested = false;
+      if (state.consecutiveSpeechChunks >= this.glmConfig.vadMinSpeechChunks) {
+        state.localSpeechStarted = true;
+      }
+      if (
+        state.localSpeechStarted &&
+        !state.responseActive &&
+        !state.responseRequested &&
+        state.audioStartedAt > 0 &&
+        now - state.audioStartedAt >= this.glmConfig.vadMaxSpeechMs
+      ) {
+        state.localSpeechStarted = false;
+        state.consecutiveSpeechChunks = 0;
+        this.requestGlmResponse(glm, state, 'max_speech_duration');
       }
       return;
     }
+
+    state.consecutiveSpeechChunks = 0;
 
     if (
       state.localSpeechStarted &&
       !state.responseActive &&
       !state.responseRequested &&
-      now - state.lastLocalSpeechAt >= silenceMs
+      now - state.lastLocalSpeechAt >= this.glmConfig.vadSilenceMs
     ) {
       state.localSpeechStarted = false;
+      state.consecutiveSpeechChunks = 0;
       this.requestGlmResponse(glm, state, 'local_silence');
-    }
-
-    if (
-      !state.responseActive &&
-      !state.responseRequested &&
-      !state.localSpeechStarted &&
-      state.receivedAudioChunks >= lowLevelFallbackChunks
-    ) {
-      this.requestGlmResponse(glm, state, 'low_level_audio_fallback');
     }
   }
 
@@ -431,11 +468,37 @@ export class VoiceRealtimeServer {
     return 'GLM realtime error';
   }
 
-  private parseGlmEvent(raw: RawData): { type?: string; delta?: string; transcript?: string; audio?: string; error?: unknown } | undefined {
+  private parseGlmEvent(raw: RawData): {
+    type?: string;
+    delta?: string;
+    transcript?: string;
+    text?: string;
+    audio?: string;
+    response?: unknown;
+    error?: unknown;
+  } | undefined {
     try {
-      return JSON.parse(raw.toString()) as { type?: string; delta?: string; transcript?: string; audio?: string; error?: unknown };
+      return JSON.parse(raw.toString()) as {
+        type?: string;
+        delta?: string;
+        transcript?: string;
+        text?: string;
+        audio?: string;
+        response?: unknown;
+        error?: unknown;
+      };
     } catch {
       return undefined;
+    }
+  }
+
+  private safeStringify(value: unknown): string {
+    try {
+      const text = JSON.stringify(value);
+      if (!text) return '';
+      return text.length > 1_200 ? `${text.slice(0, 1_200)}...` : text;
+    } catch {
+      return '[unserializable]';
     }
   }
 
@@ -487,5 +550,7 @@ function dinoPrompt(): string {
     'Keep conversation playful.',
     'Ask only one question at a time.',
     'Keep replies under 12 words.',
+    'Never start with sound effects, beeps, dings, or filler noises.',
+    'Speak directly with words only.',
   ].join('\n');
 }

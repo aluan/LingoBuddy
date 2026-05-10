@@ -30,7 +30,7 @@ enum VoiceInteractionState: CaseIterable {
 
 struct SpeakView: View {
     let onBack: () -> Void
-    @StateObject private var realtime = VoiceRealtimeClient()
+    @StateObject private var realtime = DoubaoVoiceClient()
 
     private let pageGradient = LinearGradient(
         colors: [

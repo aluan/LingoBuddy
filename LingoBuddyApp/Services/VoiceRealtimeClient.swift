@@ -59,26 +59,32 @@ final class VoiceRealtimeClient: ObservableObject {
     private static func defaultEndpoints() -> [URL] {
         #if targetEnvironment(simulator)
         [
-            URL(string: "ws://localhost:3002/voice/realtime")!,
-            URL(string: "ws://10.200.193.137:3002/voice/realtime")!
+            URL(string: "ws://localhost:3000/voice/realtime")!,
+            URL(string: "ws://192.168.3.17:3000/voice/realtime")!,
         ]
         #else
         [
-            URL(string: "ws://10.200.193.137:3002/voice/realtime")!
+            URL(string: "ws://192.168.3.17:3000/voice/realtime")!,
         ]
         #endif
+    }
+
+    private func debugLog(_ message: String) {
+        print("[LingoBuddyVoice] \(message)")
     }
 
     private func connect() {
         guard task == nil else { return }
         errorMessage = nil
         endpointIndex = 0
+        debugLog("connect requested, endpoints=\(endpoints.map(\.absoluteString).joined(separator: ", "))")
         openWebSocket()
     }
 
     private func openWebSocket() {
         let endpoint = endpoints[endpointIndex]
         currentEndpoint = endpoint.absoluteString
+        debugLog("opening websocket \(endpoint.absoluteString)")
 
         let socket = URLSession.shared.webSocketTask(with: endpoint)
         task = socket
@@ -151,6 +157,7 @@ final class VoiceRealtimeClient: ObservableObject {
 
                 switch result {
                 case .success(let message):
+                    self.debugLog("received websocket message from \(self.currentEndpoint)")
                     self.handle(message)
                     if self.task != nil {
                         self.receiveNextMessage()
@@ -159,6 +166,7 @@ final class VoiceRealtimeClient: ObservableObject {
                 case .failure(let error):
                     guard self.task != nil else { return }
 
+                    self.debugLog("websocket receive failed for \(self.currentEndpoint): \(error.localizedDescription)")
                     if !self.isConnected, self.tryNextEndpoint() {
                         return
                     }
@@ -178,10 +186,12 @@ final class VoiceRealtimeClient: ObservableObject {
         hasStartedSession = false
 
         guard endpointIndex + 1 < endpoints.count else {
+            debugLog("no more websocket endpoints to try")
             return false
         }
 
         endpointIndex += 1
+        debugLog("trying next websocket endpoint index=\(endpointIndex)")
         openWebSocket()
         return true
     }
@@ -207,6 +217,7 @@ final class VoiceRealtimeClient: ObservableObject {
 
         switch type {
         case "state.changed":
+            debugLog("state.changed \(event["state"] as? String ?? "nil")")
             handleStateChanged(event["state"] as? String)
 
         case "transcript.delta":
@@ -244,6 +255,7 @@ final class VoiceRealtimeClient: ObservableObject {
 
         case "error":
             errorMessage = event["message"] as? String ?? "Realtime voice error"
+            debugLog("server error: \(errorMessage ?? "")")
             voiceState = .thinking
             stopRecording(sendStop: false)
 
@@ -301,6 +313,7 @@ final class VoiceRealtimeClient: ObservableObject {
         task.send(.string(text)) { [weak self] error in
             guard let error else { return }
             Task { @MainActor in
+                self?.debugLog("send failed: \(error.localizedDescription)")
                 self?.errorMessage = error.localizedDescription
             }
         }

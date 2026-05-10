@@ -177,23 +177,14 @@ final class DoubaoVoiceClient: NSObject, ObservableObject {
             return
         }
 
-        // Try simple configuration first - only bot_name
-        // If custom parameters (system_role, speaking_style) are not supported by the server,
-        // you need to configure the bot personality in Volcengine Console
-        let startJson = "{\"dialog\":{\"bot_name\":\"\(config.botName)\"}}"
-
-        // Uncomment below to try with custom parameters:
-        /*
-        let startJson = """
-        {
-            "dialog": {
-                "bot_name": "\(config.botName)",
-                "system_role": "\(config.systemRole)",
-                "speaking_style": "\(config.speakingStyle)"
-            }
+        guard let startJson = makeStartEngineConfig() else {
+            let errorDetail = "Failed to build start engine config"
+            debugLog("ERROR: \(errorDetail)")
+            errorMessage = errorDetail
+            isStartingCall = false
+            isInCall = false
+            return
         }
-        """
-        */
 
         debugLog("Starting engine with config: \(startJson)")
         let result = engine.send(SEDirectiveStartEngine, data: startJson)
@@ -213,6 +204,31 @@ final class DoubaoVoiceClient: NSObject, ObservableObject {
         } else {
             debugLog("Engine start command sent successfully")
         }
+    }
+
+
+    private func makeStartEngineConfig() -> String? {
+        // StartEngine data follows Volcengine Dialog StartSession parameters.
+        // Keep TTS out of this config; speaker selection must match the resource
+        // and should be configured in the Volcengine console/resource instead.
+        let payload: [String: Any] = [
+            "dialog": [
+                "bot_name": config.botName,
+                "system_role": config.systemRole,
+                "speaking_style": config.speakingStyle,
+                "character_manifest": config.systemRole,
+                "extra": [
+                    "model": config.model
+                ]
+            ]
+        ]
+
+        guard JSONSerialization.isValidJSONObject(payload),
+              let data = try? JSONSerialization.data(withJSONObject: payload, options: []),
+              let json = String(data: data, encoding: .utf8) else {
+            return nil
+        }
+        return json
     }
 
     private func uninitializeEngine() {

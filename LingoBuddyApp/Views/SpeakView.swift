@@ -50,23 +50,26 @@ struct SpeakView: View {
 
                 statusCard
 
-                VStack(spacing: 12) {
-                    transcriptBubble(
-                        label: "You",
-                        text: realtime.childTranscript,
-                        icon: "person.fill",
-                        tint: Color(red: 0.10, green: 0.45, blue: 0.74)
-                    )
+                ScrollView {
+                    VStack(spacing: 12) {
+                        transcriptBubble(
+                            label: "You",
+                            text: realtime.childTranscript,
+                            icon: "person.fill",
+                            tint: Color(red: 0.10, green: 0.45, blue: 0.74),
+                            lineLimit: 3
+                        )
 
-                    transcriptBubble(
-                        label: "Astra",
-                        text: realtime.astraReply,
-                        icon: "sparkles",
-                        tint: Color(red: 0.86, green: 0.38, blue: 0.18)
-                    )
+                        transcriptBubble(
+                            label: "Astra",
+                            text: realtime.astraReply,
+                            icon: "sparkles",
+                            tint: Color(red: 0.86, green: 0.38, blue: 0.18),
+                            lineLimit: nil
+                        )
+                    }
+                    .padding(.vertical, 2)
                 }
-
-                Spacer(minLength: 8)
 
                 callControls
 
@@ -287,7 +290,7 @@ struct SpeakView: View {
         return "Tap Start Call to begin"
     }
 
-    private func transcriptBubble(label: String, text: String, icon: String, tint: Color) -> some View {
+    private func transcriptBubble(label: String, text: String, icon: String, tint: Color, lineLimit: Int? = nil) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
                 Image(systemName: icon)
@@ -300,7 +303,8 @@ struct SpeakView: View {
             Text(text)
                 .font(.system(size: 21, weight: .semibold, design: .rounded))
                 .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
-                .lineLimit(3)
+                .lineLimit(lineLimit)
+                .fixedSize(horizontal: false, vertical: true)
                 .minimumScaleFactor(0.78)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }

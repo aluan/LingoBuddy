@@ -11,6 +11,12 @@ export class Conversation {
   @Prop({ type: Types.ObjectId })
   taskId?: Types.ObjectId;
 
+  @Prop({ type: Types.ObjectId })
+  videoId?: Types.ObjectId;
+
+  @Prop({ type: String })
+  videoContext?: string;
+
   @Prop({ required: true, default: 'active' })
   status: 'active' | 'ended' | 'error';
 

@@ -52,6 +52,8 @@ final class DoubaoVoiceClient: NSObject, ObservableObject {
         }
     }
 
+    @Published var videoContext: String?
+
     private static let selectedVoiceKey = "DoubaoVoiceClient.selectedVoice"
 
     private var speechEngine: SpeechEngine?
@@ -75,8 +77,10 @@ final class DoubaoVoiceClient: NSObject, ObservableObject {
         print("[\(timestamp)] [DoubaoVoice] \(message)")
     }
 
-    func startCall() {
+    func startCall(videoContext: String? = nil) {
         guard !isInCall, !isStartingCall else { return }
+
+        self.videoContext = videoContext
 
         isInCall = true
         isStartingCall = true
@@ -251,8 +255,18 @@ final class DoubaoVoiceClient: NSObject, ObservableObject {
     private func makeStartEngineConfig() -> String? {
         // StartEngine data follows Volcengine Dialog StartSession parameters.
         // Uranus BigTTS speakers below are O2.0-only voices.
-        let dialogContext = dialogStore.recentContext(maxQAPairs: 20)
+        var dialogContext = dialogStore.recentContext(maxQAPairs: 20)
         debugLog("Loaded \(dialogContext.count) local dialog context messages for dialog_id=\(config.dialogId)")
+
+        // Inject video content context if available
+        if let videoContext = videoContext {
+            let systemMessage: [String: Any] = [
+                "role": "system",
+                "text": "Video content: \(videoContext)"
+            ]
+            dialogContext.insert(systemMessage, at: 0)
+            debugLog("Injected video context (\(videoContext.count) chars)")
+        }
 
         let payload: [String: Any] = [
             "dialog": [

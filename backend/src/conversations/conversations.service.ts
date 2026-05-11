@@ -23,10 +23,17 @@ export class ConversationsService {
     @InjectModel(Message.name) private readonly messageModel: Model<MessageDocument>,
   ) {}
 
-  async start(profileId: string, taskId?: string): Promise<ConversationDocument> {
+  async start(
+    profileId: string,
+    taskId?: string,
+    videoId?: string,
+    videoContext?: string,
+  ): Promise<ConversationDocument> {
     return this.conversationModel.create({
       profileId: new Types.ObjectId(profileId),
       taskId: taskId ? new Types.ObjectId(taskId) : undefined,
+      videoId: videoId ? new Types.ObjectId(videoId) : undefined,
+      videoContext,
       status: 'active',
       startedAt: new Date(),
     });

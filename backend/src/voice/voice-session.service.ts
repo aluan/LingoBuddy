@@ -27,12 +27,25 @@ export class VoiceSessionService {
     private readonly rewards: RewardsService,
   ) {}
 
-  async startSession(taskId?: string) {
+  async startSession(taskId?: string, videoId?: string) {
     const sessionId = crypto.randomUUID();
     const profile = await this.profiles.getCurrentProfile();
     const todayTask = taskId ? undefined : await this.tasks.getTodayTask();
     const finalTaskId = taskId ?? todayTask?.id;
-    const conversation = await this.conversations.start(profile.id, finalTaskId);
+
+    // Load video context if videoId is provided
+    let videoContext: string | undefined;
+    if (videoId) {
+      // TODO: Load video transcript from VideoLearningService
+      // For now, we'll pass videoId to conversation
+    }
+
+    const conversation = await this.conversations.start(
+      profile.id,
+      finalTaskId,
+      videoId,
+      videoContext,
+    );
 
     this.sessions.set(sessionId, {
       sessionId,
@@ -43,7 +56,7 @@ export class VoiceSessionService {
     });
 
     this.logger.log(
-      `Session started: ${sessionId}, conversation: ${conversation.id}`,
+      `Session started: ${sessionId}, conversation: ${conversation.id}${videoId ? `, video: ${videoId}` : ''}`,
     );
 
     return {

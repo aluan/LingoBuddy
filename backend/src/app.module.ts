@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { BullModule } from '@nestjs/bull';
 import { RedisModule } from './redis/redis.module';
 import { Profile, ProfileSchema } from './profiles/profile.schema';
 import { ProfilesController } from './profiles/profiles.controller';
@@ -21,6 +22,7 @@ import { ParentController } from './parent/parent.controller';
 import { ParentService } from './parent/parent.service';
 import { VoiceSessionController } from './voice/voice-session.controller';
 import { VoiceSessionService } from './voice/voice-session.service';
+import { VideoLearningModule } from './video-learning/video-learning.module';
 
 @Module({
   imports: [
@@ -41,6 +43,17 @@ import { VoiceSessionService } from './voice/voice-session.service';
       { name: Message.name, schema: MessageSchema },
     ]),
     RedisModule,
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        redis: {
+          host: config.get<string>('REDIS_HOST') ?? 'localhost',
+          port: config.get<number>('REDIS_PORT') ?? 6379,
+        },
+      }),
+    }),
+    VideoLearningModule,
   ],
   controllers: [
     ProfilesController,

@@ -42,13 +42,16 @@ final class VoiceSessionService: ObservableObject {
         let summary: String?
     }
 
-    func startSession(taskId: String? = nil) async throws -> SessionStartResponse {
+    func startSession(taskId: String? = nil, videoId: String? = nil) async throws -> SessionStartResponse {
         let url = URL(string: "\(baseURL)/voice/sessions/start")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        let body = ["taskId": taskId as Any]
+        let body: [String: Any] = [
+            "taskId": taskId as Any,
+            "videoId": videoId as Any
+        ]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
         let (data, response) = try await URLSession.shared.data(for: request)

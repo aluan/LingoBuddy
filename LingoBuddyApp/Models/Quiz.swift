@@ -1,0 +1,83 @@
+import Foundation
+
+struct Quiz: Codable, Identifiable {
+    let id: String
+    let videoId: String
+    let difficulty: String
+    let questions: [QuizQuestion]
+    let submitted: Bool
+    let score: Int?
+    let correctCount: Int?
+    let starsEarned: Int?
+    let createdAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id = "_id"
+        case videoId
+        case difficulty
+        case questions
+        case submitted
+        case score
+        case correctCount
+        case starsEarned
+        case createdAt
+    }
+}
+
+struct QuizQuestion: Codable, Identifiable {
+    let id: String
+    let type: String
+    let question: String
+    let options: [String]?
+    let correctAnswer: String
+    let explanation: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id = "questionId"
+        case type
+        case question
+        case options
+        case correctAnswer
+        case explanation
+    }
+}
+
+struct QuizAnswer: Codable {
+    let questionId: String
+    let answer: String
+}
+
+struct QuizResult: Codable {
+    let quizId: String
+    let score: Int
+    let correctAnswers: Int
+    let totalQuestions: Int
+    let answers: [QuizAnswerResult]
+
+    var scorePercentage: Double {
+        guard totalQuestions > 0 else { return 0 }
+        return Double(correctAnswers) / Double(totalQuestions) * 100
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case quizId
+        case score
+        case correctAnswers = "correctCount"
+        case totalQuestions = "totalCount"
+        case answers
+    }
+}
+
+struct QuizAnswerResult: Codable {
+    let questionId: String
+    let answer: String
+    let isCorrect: Bool
+}
+
+struct QuizListResponse: Codable {
+    let quizzes: [Quiz]
+}
+
+struct ChatResponse: Codable {
+    let reply: String
+}

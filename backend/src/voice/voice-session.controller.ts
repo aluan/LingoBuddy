@@ -6,8 +6,8 @@ export class VoiceSessionController {
   constructor(private readonly voiceSession: VoiceSessionService) {}
 
   @Post('start')
-  async startSession(@Body() body: { taskId?: string }) {
-    return this.voiceSession.startSession(body.taskId);
+  async startSession(@Body() body: { taskId?: string; videoId?: string }) {
+    return this.voiceSession.startSession(body.taskId, body.videoId);
   }
 
   @Post(':sessionId/transcript')

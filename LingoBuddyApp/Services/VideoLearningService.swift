@@ -1,0 +1,202 @@
+import Foundation
+
+@MainActor
+final class VideoLearningService: ObservableObject {
+    @Published var videos: [VideoContent] = []
+    @Published var isLoading = false
+    @Published var errorMessage: String?
+
+    private let baseURL: String
+
+    init() {
+        self.baseURL = DoubaoConfig.backendBaseURL
+    }
+
+    // MARK: - Video Management
+
+    func submitVideo(url: String) async throws -> String {
+        let endpoint = URL(string: "\(baseURL)/video-learning/submit")!
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body = ["url": url]
+        request.httpBody = try JSONEncoder().encode(body)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw VideoLearningError.invalidResponse
+        }
+
+        let result = try JSONDecoder().decode(VideoSubmitResponse.self, from: data)
+        return result.videoId
+    }
+
+    func fetchVideoStatus(videoId: String) async throws -> VideoStatus {
+        let endpoint = URL(string: "\(baseURL)/video-learning/\(videoId)/status")!
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "GET"
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw VideoLearningError.invalidResponse
+        }
+
+        return try JSONDecoder().decode(VideoStatus.self, from: data)
+    }
+
+    func fetchVideoList() async throws -> [VideoContent] {
+        let endpoint = URL(string: "\(baseURL)/video-learning/list")!
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "GET"
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw VideoLearningError.invalidResponse
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        let result = try decoder.decode(VideoListResponse.self, from: data)
+        return result.videos
+    }
+
+    func fetchVideoDetail(videoId: String) async throws -> VideoContent {
+        let endpoint = URL(string: "\(baseURL)/video-learning/\(videoId)")!
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "GET"
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw VideoLearningError.invalidResponse
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        return try decoder.decode(VideoContent.self, from: data)
+    }
+
+    func deleteVideo(videoId: String) async throws {
+        let endpoint = URL(string: "\(baseURL)/video-learning/\(videoId)")!
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "DELETE"
+
+        let (_, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw VideoLearningError.invalidResponse
+        }
+    }
+
+    // MARK: - Chat
+
+    func sendChatMessage(videoId: String, message: String) async throws -> String {
+        let endpoint = URL(string: "\(baseURL)/video-learning/\(videoId)/chat")!
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body = ["message": message]
+        request.httpBody = try JSONEncoder().encode(body)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw VideoLearningError.invalidResponse
+        }
+
+        let result = try JSONDecoder().decode(ChatResponse.self, from: data)
+        return result.reply
+    }
+
+    // MARK: - Quiz
+
+    func generateQuiz(videoId: String, difficulty: String, questionCount: Int) async throws -> Quiz {
+        let endpoint = URL(string: "\(baseURL)/video-learning/\(videoId)/generate-quiz")!
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body = ["difficulty": difficulty, "questionCount": questionCount] as [String : Any]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw VideoLearningError.invalidResponse
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        return try decoder.decode(Quiz.self, from: data)
+    }
+
+    func fetchQuizzes(videoId: String) async throws -> [Quiz] {
+        let endpoint = URL(string: "\(baseURL)/video-learning/\(videoId)/quizzes")!
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "GET"
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw VideoLearningError.invalidResponse
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        let result = try decoder.decode(QuizListResponse.self, from: data)
+        return result.quizzes
+    }
+
+    func submitQuiz(quizId: String, answers: [QuizAnswer]) async throws -> QuizResult {
+        let endpoint = URL(string: "\(baseURL)/video-learning/quizzes/\(quizId)/submit")!
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body = ["answers": answers]
+        request.httpBody = try JSONEncoder().encode(body)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw VideoLearningError.invalidResponse
+        }
+
+        return try JSONDecoder().decode(QuizResult.self, from: data)
+    }
+}
+
+enum VideoLearningError: LocalizedError {
+    case invalidResponse
+    case networkError
+    case decodingError
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidResponse:
+            return "Invalid response from server"
+        case .networkError:
+            return "Network connection failed"
+        case .decodingError:
+            return "Failed to decode response"
+        }
+    }
+}

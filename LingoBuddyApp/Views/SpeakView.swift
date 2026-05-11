@@ -50,6 +50,8 @@ struct SpeakView: View {
 
                 statusCard
 
+                voicePicker
+
                 ScrollView {
                     VStack(spacing: 12) {
                         transcriptBubble(
@@ -166,6 +168,37 @@ struct SpeakView: View {
                 .fill(.white.opacity(0.78))
         )
         .animation(.spring(response: 0.25, dampingFraction: 0.84), value: voiceState)
+    }
+
+
+    private var voicePicker: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Label("Astra Voice", systemImage: "speaker.wave.2.fill")
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
+
+                Spacer()
+
+                Text(realtime.selectedVoice.description)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
+
+            Picker("Astra Voice", selection: $realtime.selectedVoice) {
+                ForEach(DoubaoVoiceOption.allCases) { voice in
+                    Text(voice.displayName).tag(voice)
+                }
+            }
+            .pickerStyle(.segmented)
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(.white.opacity(0.70))
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityHint("Choose Astra's American English voice. During a call, the new voice is applied immediately.")
     }
 
     private var callControls: some View {

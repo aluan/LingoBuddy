@@ -2,6 +2,34 @@ import Foundation
 import AVFoundation
 import SpeechEngineToB
 
+enum DoubaoVoiceOption: String, CaseIterable, Identifiable {
+    case tim = "en_male_tim_uranus_bigtts"
+    case dacey = "en_female_dacey_uranus_bigtts"
+    case stokie = "en_female_stokie_uranus_bigtts"
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .tim:
+            "Tim"
+        case .dacey:
+            "Dacey"
+        case .stokie:
+            "Stokie"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .tim:
+            "Male · American English"
+        case .dacey, .stokie:
+            "Female · American English"
+        }
+    }
+}
+
 @MainActor
 final class DoubaoVoiceClient: NSObject, ObservableObject {
     @Published var voiceState: VoiceInteractionState = .thinking
@@ -17,17 +45,28 @@ final class DoubaoVoiceClient: NSObject, ObservableObject {
     @Published var audioChunksSent = 0
     @Published var audioChunksReceived = 0
     @Published var inputLevel = 0.0
+    @Published var selectedVoice: DoubaoVoiceOption {
+        didSet {
+            UserDefaults.standard.set(selectedVoice.rawValue, forKey: Self.selectedVoiceKey)
+            updateVoiceConfigIfNeeded()
+        }
+    }
+
+    private static let selectedVoiceKey = "DoubaoVoiceClient.selectedVoice"
 
     private var speechEngine: SpeechEngine?
     private var sessionId: String?
     private var conversationId: String?
-    private let sessionService = VoiceSessionService()
     private var currentTranscript = ""
     private var currentReply = ""
+    private var currentTranscriptSaved = false
 
     private let config: DoubaoConfig.Type = DoubaoConfig.self
+    private lazy var dialogStore = LocalDialogStore(dialogId: config.dialogId)
 
     override init() {
+        let savedVoiceId = UserDefaults.standard.string(forKey: Self.selectedVoiceKey)
+        self.selectedVoice = savedVoiceId.flatMap(DoubaoVoiceOption.init(rawValue:)) ?? .dacey
         super.init()
     }
 
@@ -50,24 +89,11 @@ final class DoubaoVoiceClient: NSObject, ObservableObject {
         voiceState = .thinking
         currentTranscript = ""
         currentReply = ""
+        currentTranscriptSaved = false
 
-        Task {
-            do {
-                debugLog("Starting session request to backend...")
-                let response = try await sessionService.startSession()
-                sessionId = response.sessionId
-                conversationId = response.conversationId
-                debugLog("Session started: \(response.sessionId)")
-                errorMessage = nil
-                initializeEngine()
-            } catch {
-                let errorDetail = "Failed to start session: \(error.localizedDescription)"
-                debugLog("ERROR: \(errorDetail)")
-                errorMessage = errorDetail
-                isStartingCall = false
-                isInCall = false
-            }
-        }
+        sessionId = nil
+        conversationId = nil
+        initializeEngine()
     }
 
     func endCall() {
@@ -82,17 +108,6 @@ final class DoubaoVoiceClient: NSObject, ObservableObject {
 
         if let engine = speechEngine {
             _ = engine.send(SEDirectiveStopEngine)
-        }
-
-        if let sessionId = sessionId {
-            Task {
-                do {
-                    _ = try await sessionService.endSession(sessionId: sessionId)
-                    debugLog("Session ended: \(sessionId)")
-                } catch {
-                    debugLog("Failed to end session: \(error.localizedDescription)")
-                }
-            }
         }
 
         uninitializeEngine()
@@ -207,20 +222,51 @@ final class DoubaoVoiceClient: NSObject, ObservableObject {
     }
 
 
+
+    private func makeTTSConfig() -> [String: Any] {
+        [
+            "tts": [
+                "speaker": selectedVoice.rawValue
+            ]
+        ]
+    }
+
+    private func updateVoiceConfigIfNeeded() {
+        guard isInCall || isStartingCall, let engine = speechEngine else { return }
+        let payload = makeTTSConfig()
+        guard JSONSerialization.isValidJSONObject(payload),
+              let data = try? JSONSerialization.data(withJSONObject: payload, options: []),
+              let json = String(data: data, encoding: .utf8) else {
+            debugLog("Failed to build voice update config")
+            return
+        }
+
+        debugLog("Updating voice config: \(json)")
+        let result = engine.send(SEDirectiveEventUpdateConfig, data: json)
+        if result != SENoError {
+            debugLog("Failed to update voice config: error code \(result.rawValue)")
+        }
+    }
+
     private func makeStartEngineConfig() -> String? {
         // StartEngine data follows Volcengine Dialog StartSession parameters.
-        // Keep TTS out of this config; speaker selection must match the resource
-        // and should be configured in the Volcengine console/resource instead.
+        // Uranus BigTTS speakers below are O2.0-only voices.
+        let dialogContext = dialogStore.recentContext(maxQAPairs: 20)
+        debugLog("Loaded \(dialogContext.count) local dialog context messages for dialog_id=\(config.dialogId)")
+
         let payload: [String: Any] = [
             "dialog": [
                 "bot_name": config.botName,
                 "system_role": config.systemRole,
                 "speaking_style": config.speakingStyle,
+                "dialog_id": config.dialogId,
                 "character_manifest": config.systemRole,
+                "dialog_context": dialogContext,
                 "extra": [
                     "model": config.model
                 ]
-            ]
+            ],
+            "tts": makeTTSConfig()["tts"] as Any
         ]
 
         guard JSONSerialization.isValidJSONObject(payload),
@@ -300,19 +346,7 @@ extension DoubaoVoiceClient: SpeechEngineDelegate {
         case SEEventASREnded:
             debugLog("ASR ended")
             voiceState = .thinking
-            if !currentTranscript.isEmpty, let sessionId = sessionId {
-                Task {
-                    do {
-                        _ = try await sessionService.saveTranscript(
-                            sessionId: sessionId,
-                            text: currentTranscript,
-                            role: "child"
-                        )
-                    } catch {
-                        debugLog("Failed to save transcript: \(error.localizedDescription)")
-                    }
-                }
-            }
+            saveCurrentTranscriptIfNeeded()
 
         case SEEventChatResponse:
             handleChatResponse(data: data)
@@ -320,23 +354,10 @@ extension DoubaoVoiceClient: SpeechEngineDelegate {
         case SEEventChatEnded:
             debugLog("Chat ended")
             voiceState = .listening
-            if !currentReply.isEmpty, let sessionId = sessionId {
-                Task {
-                    do {
-                        _ = try await sessionService.saveTranscript(
-                            sessionId: sessionId,
-                            text: currentReply,
-                            role: "astra"
-                        )
-                        // Grant reward
-                        let rewardResponse = try await sessionService.grantReward(sessionId: sessionId, stars: 1)
-                        totalStars = rewardResponse.totalStars
-                    } catch {
-                        debugLog("Failed to save reply or grant reward: \(error.localizedDescription)")
-                    }
-                }
-            }
+            saveCurrentReplyIfNeeded()
             currentReply = ""
+            currentTranscript = ""
+            currentTranscriptSaved = false
 
         case SEEventASRInfo:
             debugLog("ASR info: \(dataString)")
@@ -344,6 +365,22 @@ extension DoubaoVoiceClient: SpeechEngineDelegate {
         default:
             debugLog("Unhandled message type: \(type.rawValue)")
         }
+    }
+
+
+    private func saveCurrentTranscriptIfNeeded() {
+        let text = currentTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, !currentTranscriptSaved else { return }
+        dialogStore.append(role: LocalDialogStore.userRole, text: text)
+        currentTranscriptSaved = true
+        debugLog("Saved user transcript locally for dialog_id=\(config.dialogId)")
+    }
+
+    private func saveCurrentReplyIfNeeded() {
+        let text = currentReply.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        dialogStore.append(role: LocalDialogStore.assistantRole, text: text)
+        debugLog("Saved assistant reply locally for dialog_id=\(config.dialogId)")
     }
 
     private func handleASRResponse(data: Data?) {
@@ -355,6 +392,9 @@ extension DoubaoVoiceClient: SpeechEngineDelegate {
             return
         }
 
+        if text != currentTranscript {
+            currentTranscriptSaved = false
+        }
         currentTranscript = text
         childTranscript = text
         audioChunksSent += 1

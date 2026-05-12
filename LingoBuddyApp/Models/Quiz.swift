@@ -10,6 +10,7 @@ struct Quiz: Codable, Identifiable {
     let correctCount: Int?
     let starsEarned: Int?
     let createdAt: Date
+    let answers: [StoredQuizAnswer]?
 
     enum CodingKeys: String, CodingKey {
         case id = "_id"
@@ -21,7 +22,23 @@ struct Quiz: Codable, Identifiable {
         case correctCount
         case starsEarned
         case createdAt
+        case answers
     }
+
+    func toQuizResult() -> QuizResult? {
+        guard submitted, let score, let correctCount, let answers else { return nil }
+        let results = answers.map { a -> QuizAnswerResult in
+            let correct = questions.first(where: { $0.id == a.questionId })?.correctAnswer == a.answer
+            return QuizAnswerResult(questionId: a.questionId, answer: a.answer, isCorrect: correct)
+        }
+        return QuizResult(quizId: id, score: score, correctAnswers: correctCount,
+                          totalQuestions: questions.count, answers: results)
+    }
+}
+
+struct StoredQuizAnswer: Codable {
+    let questionId: String
+    let answer: String
 }
 
 struct QuizQuestion: Codable, Identifiable {
@@ -47,7 +64,8 @@ struct QuizAnswer: Codable {
     let answer: String
 }
 
-struct QuizResult: Codable {
+struct QuizResult: Codable, Identifiable {
+    var id: String { quizId }
     let quizId: String
     let score: Int
     let correctAnswers: Int

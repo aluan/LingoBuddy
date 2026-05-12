@@ -2,16 +2,18 @@ import SwiftUI
 
 struct VideoVoiceChatView: View {
     let videoId: String
+    let videoTitle: String
     let videoContext: String
     let onBack: () -> Void
 
     @StateObject private var realtime: DoubaoVoiceClient
 
-    init(videoId: String, videoContext: String, onBack: @escaping () -> Void) {
+    init(videoId: String, videoTitle: String, videoContext: String, onBack: @escaping () -> Void) {
         self.videoId = videoId
+        self.videoTitle = videoTitle
         self.videoContext = videoContext
         self.onBack = onBack
-        _realtime = StateObject(wrappedValue: DoubaoVoiceClient())
+        _realtime = StateObject(wrappedValue: DoubaoVoiceClient(videoTitle: videoTitle, videoContext: videoContext))
     }
 
     private let pageGradient = LinearGradient(
@@ -338,6 +340,7 @@ struct VideoVoiceChatView: View {
 #Preview {
     VideoVoiceChatView(
         videoId: "test-id",
+        videoTitle: "Sample Video",
         videoContext: "Sample video context",
         onBack: {}
     )

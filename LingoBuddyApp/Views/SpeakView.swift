@@ -203,7 +203,7 @@ struct SpeakView: View {
 
     private var callControls: some View {
         HStack(spacing: 14) {
-            Button(action: realtime.startCall) {
+            Button(action: { realtime.startCall() }) {
                 Label("Start Call", systemImage: "phone.fill")
                     .font(.system(size: 17, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)

@@ -7,9 +7,11 @@ import {
   Param,
   Logger,
 } from '@nestjs/common';
+import axios from 'axios';
 import { VideoLearningService } from './video-learning.service';
 import { VideoProcessorService } from './video-processor.service';
 import { QuizService } from './quiz.service';
+import { VideoChatService } from './video-chat.service';
 
 @Controller('video-learning')
 export class VideoLearningController {
@@ -19,30 +21,49 @@ export class VideoLearningController {
     private readonly videoLearningService: VideoLearningService,
     private readonly videoProcessorService: VideoProcessorService,
     private readonly quizService: QuizService,
+    private readonly videoChatService: VideoChatService,
   ) {}
 
   @Post('submit')
   async submitVideo(@Body() body: { url: string }) {
     this.logger.log(`Submitting video: ${body.url}`);
 
+    // Extract URL from mixed text (e.g. "【Title】 https://b23.tv/xxx")
+    const urlMatch = body.url.match(/https?:\/\/\S+/);
+    if (!urlMatch) {
+      throw new Error('No URL found in input');
+    }
+    const rawUrl = urlMatch[0].replace(/[��）)】]*$/, ''); // strip trailing CJK brackets
+
+    // Resolve b23.tv short URLs to full Bilibili URL
+    let resolvedUrl = rawUrl;
+    if (rawUrl.includes('b23.tv')) {
+      const res = await axios.get(rawUrl, {
+        maxRedirects: 5,
+        validateStatus: () => true,
+      });
+      resolvedUrl = res.request?.res?.responseUrl ?? res.config?.url ?? rawUrl;
+      this.logger.log(`Resolved short URL to: ${resolvedUrl}`);
+    }
+
     // Extract BV ID from URL
-    const bvMatch = body.url.match(/BV[\w]+/);
+    const bvMatch = resolvedUrl.match(/BV[\w]+/);
     if (!bvMatch) {
-      throw new Error('Invalid Bilibili URL');
+      throw new Error('Invalid Bilibili URL: could not extract BV ID');
     }
     const videoId = bvMatch[0];
 
     // TODO: Get current profile ID from session/auth
-    const profileId = 'temp-profile-id';
+    const profileId = '000000000000000000000001';
 
     const video = await this.videoLearningService.create(
       profileId,
-      body.url,
+      resolvedUrl,
       videoId,
     );
 
     // Enqueue video processing task
-    await this.videoProcessorService.enqueueVideo(video.id, body.url, videoId);
+    await this.videoProcessorService.enqueueVideo(video.id, resolvedUrl, videoId);
 
     return {
       videoId: video.id,
@@ -74,7 +95,7 @@ export class VideoLearningController {
   @Get('list')
   async listVideos() {
     // TODO: Get current profile ID from session/auth
-    const profileId = 'temp-profile-id';
+    const profileId = '000000000000000000000001';
 
     const videos = await this.videoLearningService.findByProfileId(profileId);
 
@@ -120,8 +141,10 @@ export class VideoLearningController {
       throw new Error('Video transcript not ready');
     }
 
-    // TODO: Implement LLM chat with video context
-    const reply = `This is a placeholder reply. Video context: ${video.transcriptText?.substring(0, 100)}...`;
+    const reply = await this.videoChatService.chat(
+      video.transcriptText || '',
+      body.message,
+    );
 
     return { reply };
   }
@@ -145,7 +168,7 @@ export class VideoLearningController {
     );
 
     // TODO: Get current profile ID
-    const profileId = 'temp-profile-id';
+    const profileId = '000000000000000000000001';
 
     const quiz = await this.videoLearningService.createQuiz(
       videoId,
@@ -199,10 +222,15 @@ export class VideoLearningController {
     // TODO: Grant stars to user via RewardsService
 
     return {
+      quizId,
       score,
       correctCount,
       totalCount: quiz.questions.length,
       stars,
+      answers: body.answers.map((a) => {
+        const q = quiz.questions.find((q) => q.questionId === a.questionId);
+        return { questionId: a.questionId, answer: a.answer, isCorrect: a.answer === q?.correctAnswer };
+      }),
     };
   }
 }

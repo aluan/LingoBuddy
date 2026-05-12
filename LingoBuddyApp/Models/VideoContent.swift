@@ -5,7 +5,7 @@ struct VideoContent: Codable, Identifiable {
     let url: String
     let videoId: String
     let title: String
-    let duration: Int
+    let duration: Double
     let thumbnailUrl: String?
     let transcriptStatus: String
     let transcriptSource: String?

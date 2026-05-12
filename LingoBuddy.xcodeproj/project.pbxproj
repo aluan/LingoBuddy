@@ -7,29 +7,42 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A74F3C1A9B52D00100100001 /* LocalDialogStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74F3C1A9B52D00100100002 /* LocalDialogStore.swift */; };
 		2447215D16E68073BEB1A6E0 /* aec.model in Resources */ = {isa = PBXBuildFile; fileRef = 905F2E1AF403327622466893 /* aec.model */; };
 		2F4A5A2477D2590BEF2F4550 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BFA79BA3E3AA48031181C445 /* Assets.xcassets */; };
 		400CB3A902507566E6D8A28E /* AppRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4075572E9AC30169D5E1D1E /* AppRootView.swift */; };
 		6414D5F8A011C54FB4302990 /* DesignImageBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28FE0E08B3AB3B9DBA41D17 /* DesignImageBackground.swift */; };
+		AA01BCDE12345678ABCDEF02 /* MeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01BCDE12345678ABCDEF01; };
 		7D452CDEDB262B684FC0BDBA /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62993341DD2A75B0E5C44BA1 /* HomeView.swift */; };
 		910FF2A6480F7C949D3A0560 /* Pods_LingoBuddy.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A0BCD9278DA3363D4D1E2396 /* Pods_LingoBuddy.framework */; };
 		9C08FCFE8DCD9A614E01CFC2 /* SpeakView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A1FCC1AEF00745CE00EE72 /* SpeakView.swift */; };
+		A74F3C1A9B52D00100100001 /* LocalDialogStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74F3C1A9B52D00100100002 /* LocalDialogStore.swift */; };
 		B1073205D66815E3AA8BEED2 /* LingoBuddyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B518445913F5E022D367D6 /* LingoBuddyApp.swift */; };
 		C92BB6E0F1C64C0FA7AC1731 /* VoiceRealtimeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92BB6DFF1C64C0FA7AC1731 /* VoiceRealtimeClient.swift */; };
 		E16F78E72FB037A800A9405E /* DoubaoVoiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E16F78E52FB037A800A9405E /* DoubaoVoiceClient.swift */; };
 		E16F78E82FB037A800A9405E /* VoiceSessionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E16F78E62FB037A800A9405E /* VoiceSessionService.swift */; };
 		E16F78ED2FB0382D00A9405E /* DoubaoConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = E16F78E92FB0382D00A9405E /* DoubaoConfig.swift */; };
+		E172BA6E2FB2237F0066A16D /* VideoProcessingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E172BA692FB2237F0066A16D /* VideoProcessingView.swift */; };
+		E172BA6F2FB2237F0066A16D /* VideoDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E172BA672FB2237F0066A16D /* VideoDetailView.swift */; };
+		E172BA702FB2237F0066A16D /* VideoQuizView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E172BA6A2FB2237F0066A16D /* VideoQuizView.swift */; };
+		E172BA712FB2237F0066A16D /* VideoVoiceChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E172BA6C2FB2237F0066A16D /* VideoVoiceChatView.swift */; };
+		E172BA722FB2237F0066A16D /* VideoLearningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E172BA682FB2237F0066A16D /* VideoLearningView.swift */; };
+		E172BA732FB2237F0066A16D /* QuizResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E172BA662FB2237F0066A16D /* QuizResultView.swift */; };
+		E172BA742FB2237F0066A16D /* QuestionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E172BA652FB2237F0066A16D /* QuestionCard.swift */; };
+		E172BA752FB2237F0066A16D /* VideoTextChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E172BA6B2FB2237F0066A16D /* VideoTextChatView.swift */; };
+		E172BA772FB223980066A16D /* VideoLearningService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E172BA762FB223980066A16D /* VideoLearningService.swift */; };
+		E172BA7B2FB223B20066A16D /* Quiz.swift in Sources */ = {isa = PBXBuildFile; fileRef = E172BA782FB223B20066A16D /* Quiz.swift */; };
+		E172BA7C2FB223B20066A16D /* VideoContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E172BA792FB223B20066A16D /* VideoContent.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		A74F3C1A9B52D00100100002 /* LocalDialogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalDialogStore.swift; sourceTree = "<group>"; };
 		48B518445913F5E022D367D6 /* LingoBuddyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LingoBuddyApp.swift; sourceTree = "<group>"; };
+		AA01BCDE12345678ABCDEF01 /* MeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeView.swift; sourceTree = "<group>"; };
 		62993341DD2A75B0E5C44BA1 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		822996F6DEFA88EB930B4349 /* LingoBuddy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LingoBuddy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		905F2E1AF403327622466893 /* aec.model */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = aec.model; sourceTree = "<group>"; };
 		A0BCD9278DA3363D4D1E2396 /* Pods_LingoBuddy.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_LingoBuddy.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A28FE0E08B3AB3B9DBA41D17 /* DesignImageBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignImageBackground.swift; sourceTree = "<group>"; };
+		A74F3C1A9B52D00100100002 /* LocalDialogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalDialogStore.swift; sourceTree = "<group>"; };
 		B1A1FCC1AEF00745CE00EE72 /* SpeakView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakView.swift; sourceTree = "<group>"; };
 		B652533A8F4EE4E79D8201F4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		BB8A4011BD05995B26FC34F6 /* Pods-LingoBuddy.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LingoBuddy.release.xcconfig"; path = "Target Support Files/Pods-LingoBuddy/Pods-LingoBuddy.release.xcconfig"; sourceTree = "<group>"; };
@@ -39,6 +52,17 @@
 		E16F78E52FB037A800A9405E /* DoubaoVoiceClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoubaoVoiceClient.swift; sourceTree = "<group>"; };
 		E16F78E62FB037A800A9405E /* VoiceSessionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSessionService.swift; sourceTree = "<group>"; };
 		E16F78E92FB0382D00A9405E /* DoubaoConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoubaoConfig.swift; sourceTree = "<group>"; };
+		E172BA652FB2237F0066A16D /* QuestionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionCard.swift; sourceTree = "<group>"; };
+		E172BA662FB2237F0066A16D /* QuizResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizResultView.swift; sourceTree = "<group>"; };
+		E172BA672FB2237F0066A16D /* VideoDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDetailView.swift; sourceTree = "<group>"; };
+		E172BA682FB2237F0066A16D /* VideoLearningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoLearningView.swift; sourceTree = "<group>"; };
+		E172BA692FB2237F0066A16D /* VideoProcessingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoProcessingView.swift; sourceTree = "<group>"; };
+		E172BA6A2FB2237F0066A16D /* VideoQuizView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoQuizView.swift; sourceTree = "<group>"; };
+		E172BA6B2FB2237F0066A16D /* VideoTextChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoTextChatView.swift; sourceTree = "<group>"; };
+		E172BA6C2FB2237F0066A16D /* VideoVoiceChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoVoiceChatView.swift; sourceTree = "<group>"; };
+		E172BA762FB223980066A16D /* VideoLearningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoLearningService.swift; sourceTree = "<group>"; };
+		E172BA782FB223B20066A16D /* Quiz.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Quiz.swift; sourceTree = "<group>"; };
+		E172BA792FB223B20066A16D /* VideoContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoContent.swift; sourceTree = "<group>"; };
 		E832C2CD340C5BCF7D2EA0B4 /* Pods-LingoBuddy.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LingoBuddy.debug.xcconfig"; path = "Target Support Files/Pods-LingoBuddy/Pods-LingoBuddy.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -74,7 +98,9 @@
 		8470825A9FBEF672C4F99E7D /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				E172BA6D2FB2237F0066A16D /* VideoLearning */,
 				A28FE0E08B3AB3B9DBA41D17 /* DesignImageBackground.swift */,
+				AA01BCDE12345678ABCDEF01 /* MeView.swift */,
 				62993341DD2A75B0E5C44BA1 /* HomeView.swift */,
 				B1A1FCC1AEF00745CE00EE72 /* SpeakView.swift */,
 			);
@@ -100,6 +126,7 @@
 		BB7595C5E23B0970029E93A0 /* LingoBuddyApp */ = {
 			isa = PBXGroup;
 			children = (
+				E172BA7A2FB223B20066A16D /* Models */,
 				E16F78EB2FB0382D00A9405E /* Config */,
 				C4075572E9AC30169D5E1D1E /* AppRootView.swift */,
 				BFA79BA3E3AA48031181C445 /* Assets.xcassets */,
@@ -115,6 +142,7 @@
 		C92BB6E1F1C64C0FA7AC1731 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				E172BA762FB223980066A16D /* VideoLearningService.swift */,
 				E16F78E52FB037A800A9405E /* DoubaoVoiceClient.swift */,
 				A74F3C1A9B52D00100100002 /* LocalDialogStore.swift */,
 				E16F78E62FB037A800A9405E /* VoiceSessionService.swift */,
@@ -129,6 +157,30 @@
 				E16F78E92FB0382D00A9405E /* DoubaoConfig.swift */,
 			);
 			path = Config;
+			sourceTree = "<group>";
+		};
+		E172BA6D2FB2237F0066A16D /* VideoLearning */ = {
+			isa = PBXGroup;
+			children = (
+				E172BA652FB2237F0066A16D /* QuestionCard.swift */,
+				E172BA662FB2237F0066A16D /* QuizResultView.swift */,
+				E172BA672FB2237F0066A16D /* VideoDetailView.swift */,
+				E172BA682FB2237F0066A16D /* VideoLearningView.swift */,
+				E172BA692FB2237F0066A16D /* VideoProcessingView.swift */,
+				E172BA6A2FB2237F0066A16D /* VideoQuizView.swift */,
+				E172BA6B2FB2237F0066A16D /* VideoTextChatView.swift */,
+				E172BA6C2FB2237F0066A16D /* VideoVoiceChatView.swift */,
+			);
+			path = VideoLearning;
+			sourceTree = "<group>";
+		};
+		E172BA7A2FB223B20066A16D /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				E172BA782FB223B20066A16D /* Quiz.swift */,
+				E172BA792FB223B20066A16D /* VideoContent.swift */,
+			);
+			path = Models;
 			sourceTree = "<group>";
 		};
 		FF0509CBFE242B3B2A2F0767 = {
@@ -259,14 +311,26 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E172BA6E2FB2237F0066A16D /* VideoProcessingView.swift in Sources */,
+				E172BA6F2FB2237F0066A16D /* VideoDetailView.swift in Sources */,
+				E172BA702FB2237F0066A16D /* VideoQuizView.swift in Sources */,
+				E172BA712FB2237F0066A16D /* VideoVoiceChatView.swift in Sources */,
+				E172BA722FB2237F0066A16D /* VideoLearningView.swift in Sources */,
+				E172BA7B2FB223B20066A16D /* Quiz.swift in Sources */,
+				E172BA7C2FB223B20066A16D /* VideoContent.swift in Sources */,
+				E172BA732FB2237F0066A16D /* QuizResultView.swift in Sources */,
+				E172BA742FB2237F0066A16D /* QuestionCard.swift in Sources */,
+				E172BA752FB2237F0066A16D /* VideoTextChatView.swift in Sources */,
 				400CB3A902507566E6D8A28E /* AppRootView.swift in Sources */,
 				A74F3C1A9B52D00100100001 /* LocalDialogStore.swift in Sources */,
 				6414D5F8A011C54FB4302990 /* DesignImageBackground.swift in Sources */,
 				E16F78E72FB037A800A9405E /* DoubaoVoiceClient.swift in Sources */,
 				E16F78E82FB037A800A9405E /* VoiceSessionService.swift in Sources */,
 				E16F78ED2FB0382D00A9405E /* DoubaoConfig.swift in Sources */,
+				AA01BCDE12345678ABCDEF02 /* MeView.swift in Sources */,
 				7D452CDEDB262B684FC0BDBA /* HomeView.swift in Sources */,
 				B1073205D66815E3AA8BEED2 /* LingoBuddyApp.swift in Sources */,
+				E172BA772FB223980066A16D /* VideoLearningService.swift in Sources */,
 				9C08FCFE8DCD9A614E01CFC2 /* SpeakView.swift in Sources */,
 				C92BB6E0F1C64C0FA7AC1731 /* VoiceRealtimeClient.swift in Sources */,
 			);
@@ -284,7 +348,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = HLATLRC265;
 				INFOPLIST_FILE = LingoBuddyApp/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -369,7 +433,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = HLATLRC265;
 				INFOPLIST_FILE = LingoBuddyApp/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

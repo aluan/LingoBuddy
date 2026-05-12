@@ -1,38 +1,19 @@
 import SwiftUI
 
-enum AppRoute {
-    case home
-    case speak
-}
-
 struct AppRootView: View {
-    @State private var route: AppRoute = .home
-
     var body: some View {
-        ZStack {
-            switch route {
-            case .home:
-                HomeView(
-                    onStartSpeaking: {
-                        withAnimation(.spring(response: 0.36, dampingFraction: 0.86)) {
-                            route = .speak
-                        }
-                    }
-                )
-                .transition(.opacity.combined(with: .scale(scale: 1.02)))
+        TabView {
+            VideoLearningView()
+                .tabItem {
+                    Label("Home", systemImage: "house.fill")
+                }
 
-            case .speak:
-                SpeakView(
-                    onBack: {
-                        withAnimation(.spring(response: 0.36, dampingFraction: 0.9)) {
-                            route = .home
-                        }
-                    }
-                )
-                .transition(.opacity)
-            }
+            MeView()
+                .tabItem {
+                    Label("Me", systemImage: "person.crop.circle.fill")
+                }
         }
-        .background(Color(red: 0.51, green: 0.81, blue: 0.97))
+        .tint(Color(red: 0.13, green: 0.53, blue: 0.45))
         .preferredColorScheme(.light)
     }
 }

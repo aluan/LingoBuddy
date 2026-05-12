@@ -10,6 +10,7 @@ import { BilibiliSubtitleService } from './bilibili-subtitle.service';
 import { BilibiliDownloaderService } from './bilibili-downloader.service';
 import { DoubaoAsrService } from './doubao-asr.service';
 import { QuizService } from './quiz.service';
+import { VideoChatService } from './video-chat.service';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { QuizService } from './quiz.service';
     BilibiliDownloaderService,
     DoubaoAsrService,
     QuizService,
+    VideoChatService,
   ],
   exports: [VideoLearningService],
 })

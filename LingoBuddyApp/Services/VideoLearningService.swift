@@ -12,6 +12,22 @@ final class VideoLearningService: ObservableObject {
         self.baseURL = DoubaoConfig.backendBaseURL
     }
 
+    private var decoder: JSONDecoder {
+        let d = JSONDecoder()
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        d.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let str = try container.decode(String.self)
+            if let date = formatter.date(from: str) { return date }
+            // fallback without fractional seconds
+            formatter.formatOptions = [.withInternetDateTime]
+            if let date = formatter.date(from: str) { return date }
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date: \(str)")
+        }
+        return d
+    }
+
     // MARK: - Video Management
 
     func submitVideo(url: String) async throws -> String {
@@ -61,9 +77,6 @@ final class VideoLearningService: ObservableObject {
             throw VideoLearningError.invalidResponse
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-
         let result = try decoder.decode(VideoListResponse.self, from: data)
         return result.videos
     }
@@ -79,9 +92,6 @@ final class VideoLearningService: ObservableObject {
               (200...299).contains(httpResponse.statusCode) else {
             throw VideoLearningError.invalidResponse
         }
-
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
 
         return try decoder.decode(VideoContent.self, from: data)
     }
@@ -139,9 +149,6 @@ final class VideoLearningService: ObservableObject {
             throw VideoLearningError.invalidResponse
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-
         return try decoder.decode(Quiz.self, from: data)
     }
 
@@ -156,9 +163,6 @@ final class VideoLearningService: ObservableObject {
               (200...299).contains(httpResponse.statusCode) else {
             throw VideoLearningError.invalidResponse
         }
-
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
 
         let result = try decoder.decode(QuizListResponse.self, from: data)
         return result.quizzes

@@ -38,15 +38,22 @@ struct VideoQuizView: View {
         }
         .sheet(isPresented: $showResult) {
             if let result = viewModel.quizResult, let quiz = viewModel.quiz {
-                QuizResultView(
-                    result: result,
-                    quiz: quiz,
-                    onDismiss: {
-                        showResult = false
-                        onBack()
-                    }
-                )
+                QuizResultView(result: result, quiz: quiz, onDismiss: {
+                    showResult = false
+                    viewModel.quiz = nil
+                    viewModel.answers = [:]
+                })
             }
+        }
+        .sheet(item: $viewModel.selectedHistoryResult) { result in
+            if let quiz = viewModel.history.first(where: { $0.id == result.quizId }) {
+                QuizResultView(result: result, quiz: quiz, onDismiss: {
+                    viewModel.selectedHistoryResult = nil
+                })
+            }
+        }
+        .onAppear {
+            Task { await viewModel.loadHistory() }
         }
     }
 
@@ -125,14 +132,24 @@ struct VideoQuizView: View {
                     .fill(.white.opacity(0.78))
             )
 
+            if let error = viewModel.errorMessage {
+                Text(error)
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundStyle(.red)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 4)
+            }
+
             Button(action: {
                 Task {
                     await viewModel.generateQuiz()
                 }
             }) {
                 if viewModel.isGenerating {
-                    ProgressView()
-                        .tint(.white)
+                    HStack(spacing: 8) {
+                        ProgressView().tint(.white)
+                        Text("Generating...").font(.system(size: 17, weight: .bold, design: .rounded))
+                    }
                 } else {
                     Text("Generate Quiz")
                         .font(.system(size: 17, weight: .bold, design: .rounded))
@@ -147,9 +164,63 @@ struct VideoQuizView: View {
             )
             .disabled(viewModel.isGenerating)
 
+            if !viewModel.history.isEmpty {
+                historySection
+            }
+
             Spacer()
         }
         .padding(.horizontal, 20)
+    }
+
+    private var historySection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Past Quizzes")
+                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
+
+            ForEach(viewModel.history) { quiz in
+                Button(action: {
+                    if let result = quiz.toQuizResult() {
+                        viewModel.selectedHistoryResult = result
+                    }
+                }) {
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("\(quiz.difficulty.capitalized) · \(quiz.questions.count) questions")
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
+                            Text(quiz.createdAt.formatted(date: .abbreviated, time: .shortened))
+                                .font(.system(size: 12, weight: .regular, design: .rounded))
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Spacer()
+
+                        if quiz.submitted, let score = quiz.score {
+                            Text("\(score)%")
+                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .foregroundStyle(score >= 60
+                                    ? Color(red: 0.13, green: 0.53, blue: 0.45)
+                                    : Color(red: 0.86, green: 0.38, blue: 0.18))
+                        } else {
+                            Text("Not submitted")
+                                .font(.system(size: 12, weight: .medium, design: .rounded))
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(14)
+                    .background(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(.white.opacity(0.78)))
+                }
+                .buttonStyle(.plain)
+                .disabled(!quiz.submitted)
+            }
+        }
     }
 
     private var quizView: some View {
@@ -230,12 +301,25 @@ final class VideoQuizViewModel: ObservableObject {
     @Published var isSubmitting = false
     @Published var quizResult: QuizResult?
     @Published var errorMessage: String?
+    @Published var history: [Quiz] = []
+    @Published var isLoadingHistory = false
+    @Published var selectedHistoryResult: QuizResult?
 
     private let videoId: String
     private let service = VideoLearningService()
 
     init(videoId: String) {
         self.videoId = videoId
+    }
+
+    func loadHistory() async {
+        isLoadingHistory = true
+        do {
+            history = try await service.fetchQuizzes(videoId: videoId)
+        } catch {
+            print("[VideoQuiz] loadHistory error: \(error)")
+        }
+        isLoadingHistory = false
     }
 
     var allQuestionsAnswered: Bool {
@@ -260,6 +344,7 @@ final class VideoQuizViewModel: ObservableObject {
                 questionCount: questionCount
             )
         } catch {
+            print("[VideoQuiz] generateQuiz error: \(error)")
             errorMessage = error.localizedDescription
         }
 
@@ -281,6 +366,9 @@ final class VideoQuizViewModel: ObservableObject {
         }
 
         isSubmitting = false
+        if quizResult != nil {
+            await loadHistory()
+        }
     }
 }
 

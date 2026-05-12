@@ -19,10 +19,9 @@ export class QuizService {
   private readonly token: string;
 
   constructor(private configService: ConfigService) {
-    // TODO: Configure Doubao LLM API endpoint
     this.llmApiUrl = 'https://ark.cn-beijing.volces.com/api/v3/chat/completions';
-    this.appKey = this.configService.get<string>('DOUBAO_APP_KEY') || '';
-    this.token = this.configService.get<string>('DOUBAO_TOKEN') || '';
+    this.appKey = '';
+    this.token = this.configService.get<string>('DOUBAO_ARK_API_KEY') || '';
   }
 
   /**
@@ -44,7 +43,7 @@ export class QuizService {
       const response = await axios.post(
         this.llmApiUrl,
         {
-          model: 'doubao-pro-32k',
+          model: 'doubao-seed-2-0-pro-260215',
           messages: [
             {
               role: 'system',
@@ -84,9 +83,7 @@ export class QuizService {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Failed to generate quiz: ${errorMessage}`);
-
-      // Fallback: generate sample questions
-      return this.generateFallbackQuestions(difficulty, questionCount);
+      throw error;
     }
   }
 
@@ -111,18 +108,16 @@ export class QuizService {
       hard: 'Focus on comprehensive understanding and critical thinking. Questions should require deeper analysis.',
     };
 
-    return `Based on this video transcript, generate ${questionCount} ${difficulty} level English learning questions for children.
+    return `Based on this video transcript, generate ${questionCount} ${difficulty} level English learning multiple choice questions for children.
 
 Transcript:
 ${transcript}
 
 Requirements:
 - ${difficultyGuide[difficulty] || difficultyGuide.easy}
-- Mix question types: multiple_choice, fill_blank, true_false
-- For multiple_choice: provide 4 options, only one correct
-- For fill_blank: the answer should be a single word or short phrase
-- For true_false: the answer should be "true" or "false"
-- Include brief explanations for each answer
+- ALL questions must be type "multiple_choice"
+- Each question must have exactly 4 options, only one correct
+- Include a brief explanation for each answer
 - Questions should test understanding of the video content
 
 Return ONLY valid JSON in this exact format:
@@ -130,22 +125,10 @@ Return ONLY valid JSON in this exact format:
   "questions": [
     {
       "type": "multiple_choice",
-      "question": "What color is the dragon?",
-      "options": ["Red", "Blue", "Green", "Yellow"],
-      "correctAnswer": "Red",
-      "explanation": "The video mentions the dragon is red."
-    },
-    {
-      "type": "fill_blank",
-      "question": "The dragon lives in a ____.",
-      "correctAnswer": "cave",
-      "explanation": "The video shows the dragon living in a cave."
-    },
-    {
-      "type": "true_false",
-      "question": "The dragon can fly.",
-      "correctAnswer": "true",
-      "explanation": "The video shows the dragon flying in the sky."
+      "question": "What food does the family cook at the barbecue?",
+      "options": ["Sausages", "Pizza", "Chicken", "Fish"],
+      "correctAnswer": "Sausages",
+      "explanation": "The video mentions sausages being cooked at the barbecue."
     }
   ]
 }`;
@@ -168,46 +151,5 @@ Return ONLY valid JSON in this exact format:
       this.logger.error(`Failed to parse quiz response: ${errorMessage}`);
       throw new Error('Invalid quiz response format');
     }
-  }
-
-  /**
-   * Generate fallback questions when LLM fails
-   */
-  private generateFallbackQuestions(
-    difficulty: string,
-    questionCount: number,
-  ): QuizQuestion[] {
-    const questions: QuizQuestion[] = [];
-
-    for (let i = 0; i < questionCount; i++) {
-      if (i % 3 === 0) {
-        questions.push({
-          questionId: `q${i + 1}`,
-          type: 'multiple_choice',
-          question: `What is the main topic of the video?`,
-          options: ['Topic A', 'Topic B', 'Topic C', 'Topic D'],
-          correctAnswer: 'Topic A',
-          explanation: 'This is a sample question. Please watch the video carefully.',
-        });
-      } else if (i % 3 === 1) {
-        questions.push({
-          questionId: `q${i + 1}`,
-          type: 'fill_blank',
-          question: `The video is about ____.`,
-          correctAnswer: 'learning',
-          explanation: 'This is a sample question. Please watch the video carefully.',
-        });
-      } else {
-        questions.push({
-          questionId: `q${i + 1}`,
-          type: 'true_false',
-          question: `The video contains educational content.`,
-          correctAnswer: 'true',
-          explanation: 'This is a sample question. Please watch the video carefully.',
-        });
-      }
-    }
-
-    return questions;
   }
 }

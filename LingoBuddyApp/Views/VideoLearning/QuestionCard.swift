@@ -35,7 +35,7 @@ struct QuestionCard: View {
 
             // Options
             VStack(spacing: 10) {
-                ForEach(question.options, id: \.self) { option in
+                ForEach(question.options ?? [], id: \.self) { option in
                     OptionButton(
                         text: option,
                         isSelected: selectedAnswer == option,
@@ -108,8 +108,8 @@ struct OptionButton: View {
     QuestionCard(
         question: QuizQuestion(
             id: "1",
-            question: "What is the capital of France?",
             type: "multiple_choice",
+            question: "What is the capital of France?",
             options: ["Paris", "London", "Berlin", "Madrid"],
             correctAnswer: "Paris",
             explanation: "Paris is the capital and largest city of France."

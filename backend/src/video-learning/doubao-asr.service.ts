@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import * as fs from 'fs';
-import * as FormData from 'form-data';
+import { randomUUID } from 'crypto';
 
 interface TranscriptSegment {
   startTime: number;
@@ -15,102 +15,82 @@ interface TranscriptResult {
   segments: TranscriptSegment[];
 }
 
+const ASR_ENDPOINT =
+  'https://openspeech.bytedance.com/api/v3/auc/bigmodel/recognize/flash';
+
 @Injectable()
 export class DoubaoAsrService {
   private readonly logger = new Logger(DoubaoAsrService.name);
-  private readonly asrApiUrl: string;
   private readonly appId: string;
   private readonly token: string;
+  private readonly resourceId: string;
 
   constructor(private configService: ConfigService) {
-    this.asrApiUrl =
-      this.configService.get<string>('DOUBAO_ASR_API_URL') ||
-      'https://openspeech.bytedance.com/api/v1/asr';
-    this.appId = this.configService.get<string>('DOUBAO_APP_ID') || '';
-    this.token = this.configService.get<string>('DOUBAO_TOKEN') || '';
+    this.appId = this.configService.get<string>('DOUBAO_ASR_APP_ID') || '';
+    this.token = this.configService.get<string>('DOUBAO_ASR_TOKEN') || '';
+    this.resourceId =
+      this.configService.get<string>('DOUBAO_ASR_RESOURCE_ID') ||
+      'volc.bigasr.auc_turbo';
   }
 
-  /**
-   * Transcribe audio file using Doubao ASR API
-   */
   async transcribe(audioFilePath: string): Promise<TranscriptResult> {
     this.logger.log(`Transcribing audio: ${audioFilePath}`);
 
-    try {
-      // Check file size
-      const stats = fs.statSync(audioFilePath);
-      const fileSizeInMB = stats.size / (1024 * 1024);
-      this.logger.log(`Audio file size: ${fileSizeInMB.toFixed(2)} MB`);
+    const stats = fs.statSync(audioFilePath);
+    const fileSizeMB = stats.size / (1024 * 1024);
+    this.logger.log(`Audio file size: ${fileSizeMB.toFixed(2)} MB`);
 
-      // If file is too large, split it
-      if (fileSizeInMB > 50) {
-        return await this.transcribeLargeFile(audioFilePath);
-      }
-
-      // Create form data
-      const formData = new FormData();
-      formData.append('audio', fs.createReadStream(audioFilePath));
-      formData.append('format', 'wav');
-      formData.append('language', 'en');
-      formData.append('enable_timestamp', 'true');
-
-      // Call ASR API
-      const response = await axios.post(this.asrApiUrl, formData, {
-        headers: {
-          Authorization: `Bearer ${this.token}`,
-          'X-App-Id': this.appId,
-          ...formData.getHeaders(),
-        },
-        timeout: 300000, // 5 minutes
-      });
-
-      if (response.data.code !== 0) {
-        throw new Error(`ASR API error: ${response.data.message}`);
-      }
-
-      // Parse result
-      const result = response.data.result;
-      const segments: TranscriptSegment[] = [];
-
-      if (result.segments && Array.isArray(result.segments)) {
-        for (const seg of result.segments) {
-          segments.push({
-            startTime: seg.start_time || 0,
-            endTime: seg.end_time || 0,
-            text: seg.text || '',
-          });
-        }
-      }
-
-      const fullText = result.text || segments.map((s) => s.text).join(' ');
-
-      this.logger.log(`Successfully transcribed audio, length: ${fullText.length} chars`);
-
-      return {
-        text: fullText,
-        segments,
-      };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      this.logger.error(`Failed to transcribe audio: ${errorMessage}`);
-      throw error;
+    if (fileSizeMB > 100) {
+      throw new Error(`Audio file too large: ${fileSizeMB.toFixed(1)} MB (max 100 MB)`);
     }
+
+    const audioBase64 = fs.readFileSync(audioFilePath).toString('base64');
+
+    const body = {
+      user: { uid: this.appId },
+      audio: { data: audioBase64 },
+      request: { model_name: 'bigmodel' },
+    };
+
+    const response = await axios.post(ASR_ENDPOINT, body, {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Api-App-Key': this.appId,
+        'X-Api-Access-Key': this.token,
+        'X-Api-Resource-Id': this.resourceId,
+        'X-Api-Request-Id': randomUUID(),
+        'X-Api-Sequence': '-1',
+      },
+      timeout: 300000,
+    });
+
+    const statusCode = response.headers['x-api-status-code'];
+    if (statusCode && statusCode !== '20000000') {
+      throw new Error(
+        `ASR API error: status=${statusCode} message=${response.headers['x-api-message'] ?? 'unknown'}`,
+      );
+    }
+
+    const result = response.data?.result;
+    if (!result) {
+      throw new Error('ASR API returned empty result');
+    }
+
+    const segments: TranscriptSegment[] = (result.utterances ?? []).map(
+      (u: { start_time: number; end_time: number; text: string }) => ({
+        startTime: u.start_time,
+        endTime: u.end_time,
+        text: u.text,
+      }),
+    );
+
+    const text: string =
+      result.text || segments.map((s) => s.text).join(' ');
+
+    this.logger.log(`Transcription done, ${text.length} chars`);
+    return { text, segments };
   }
 
-  /**
-   * Transcribe large audio file by splitting it into chunks
-   */
-  private async transcribeLargeFile(audioFilePath: string): Promise<TranscriptResult> {
-    this.logger.log(`Transcribing large audio file: ${audioFilePath}`);
-
-    // TODO: Implement audio splitting and parallel transcription
-    // For now, just try to transcribe the whole file
-    throw new Error('Large file transcription not yet implemented');
-  }
-
-  /**
-   * Check if Doubao ASR is configured
-   */
   isConfigured(): boolean {
     return !!(this.appId && this.token);
   }

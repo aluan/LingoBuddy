@@ -302,8 +302,8 @@ struct QuestionReviewCard: View {
         result: QuizResult(
             quizId: "1",
             score: 80,
-            totalQuestions: 5,
             correctAnswers: 4,
+            totalQuestions: 5,
             answers: [
                 QuizAnswerResult(questionId: "1", answer: "Paris", isCorrect: true),
                 QuizAnswerResult(questionId: "2", answer: "London", isCorrect: false)
@@ -312,18 +312,23 @@ struct QuestionReviewCard: View {
         quiz: Quiz(
             id: "1",
             videoId: "video1",
+            difficulty: "easy",
             questions: [
                 QuizQuestion(
                     id: "1",
-                    question: "What is the capital of France?",
                     type: "multiple_choice",
+                    question: "What is the capital of France?",
                     options: ["Paris", "London", "Berlin", "Madrid"],
                     correctAnswer: "Paris",
                     explanation: "Paris is the capital and largest city of France."
                 )
             ],
-            difficulty: "easy",
-            createdAt: Date()
+            submitted: false,
+            score: nil,
+            correctCount: nil,
+            starsEarned: nil,
+            createdAt: Date(),
+            answers: nil
         ),
         onDismiss: {}
     )

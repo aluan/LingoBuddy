@@ -54,6 +54,10 @@ final class DoubaoVoiceClient: NSObject, ObservableObject {
 
     @Published var videoContext: String?
 
+    private var videoBotName: String?
+    private var videoSystemRole: String?
+    private var videoSpeakingStyle: String?
+
     private static let selectedVoiceKey = "DoubaoVoiceClient.selectedVoice"
 
     private var speechEngine: SpeechEngine?
@@ -70,6 +74,38 @@ final class DoubaoVoiceClient: NSObject, ObservableObject {
         let savedVoiceId = UserDefaults.standard.string(forKey: Self.selectedVoiceKey)
         self.selectedVoice = savedVoiceId.flatMap(DoubaoVoiceOption.init(rawValue:)) ?? .dacey
         super.init()
+    }
+
+    init(videoTitle: String, videoContext: String) {
+        let savedVoiceId = UserDefaults.standard.string(forKey: Self.selectedVoiceKey)
+        self.selectedVoice = savedVoiceId.flatMap(DoubaoVoiceOption.init(rawValue:)) ?? .dacey
+        super.init()
+        self.videoContext = videoContext
+        self.videoBotName = "Buddy"
+        self.videoSystemRole = Self.buildVideoSystemRole(title: videoTitle, context: videoContext)
+        self.videoSpeakingStyle = Self.buildVideoSpeakingStyle(title: videoTitle)
+    }
+
+    private static func buildVideoSystemRole(title: String, context: String) -> String {
+        let excerpt = String(context.prefix(1500))
+        return """
+You are Buddy, a friendly English learning companion. You and the child have just watched a video called "\(title)" together.
+
+Video content:
+\(excerpt)
+
+Your mission:
+- Help the child practice English by talking about what they watched
+- Ask fun questions about the story, characters, and events
+- Explain any words or phrases the child doesn't understand
+- Always reply in simple, encouraging English suitable for children aged 6-12
+- Keep replies short (1-3 sentences)
+- If the child speaks Chinese, gently respond in English
+"""
+    }
+
+    private static func buildVideoSpeakingStyle(title: String) -> String {
+        return "You just watched '\(title)' with the child. Speak warmly and naturally like a friendly companion. Use simple English sentences suitable for Chinese elementary school students. Encourage the child and keep replies concise."
     }
 
     private func debugLog(_ message: String) {
@@ -268,13 +304,17 @@ final class DoubaoVoiceClient: NSObject, ObservableObject {
             debugLog("Injected video context (\(videoContext.count) chars)")
         }
 
+        let botName     = videoBotName     ?? config.botName
+        let systemRole  = videoSystemRole  ?? config.systemRole
+        let speakStyle  = videoSpeakingStyle ?? config.speakingStyle
+
         let payload: [String: Any] = [
             "dialog": [
-                "bot_name": config.botName,
-                "system_role": config.systemRole,
-                "speaking_style": config.speakingStyle,
+                "bot_name": botName,
+                "system_role": systemRole,
+                "speaking_style": speakStyle,
                 "dialog_id": config.dialogId,
-                "character_manifest": config.systemRole,
+                "character_manifest": systemRole,
                 "dialog_context": dialogContext,
                 "extra": [
                     "model": config.model

@@ -39,13 +39,25 @@ struct VideoDetailView: View {
             }
         }
         .sheet(isPresented: $showTextChat) {
-            // VideoTextChatView(videoId: video.id, videoContext: video.transcriptText ?? "")
+            VideoTextChatView(
+                videoId: video.id,
+                videoContext: video.transcriptText ?? "",
+                onBack: { showTextChat = false }
+            )
         }
         .sheet(isPresented: $showVoiceChat) {
-            // VideoVoiceChatView(videoId: video.id, videoContext: video.transcriptText ?? "", onBack: { showVoiceChat = false })
+            VideoVoiceChatView(
+                videoId: video.id,
+                videoTitle: video.title,
+                videoContext: video.transcriptText ?? "",
+                onBack: { showVoiceChat = false }
+            )
         }
         .sheet(isPresented: $showQuiz) {
-            // VideoQuizView(videoId: video.id)
+            VideoQuizView(
+                videoId: video.id,
+                onBack: { showQuiz = false }
+            )
         }
     }
 
@@ -158,10 +170,9 @@ struct VideoDetailView: View {
         }
     }
 
-    private func formatDuration(_ seconds: Int) -> String {
-        let minutes = seconds / 60
-        let secs = seconds % 60
-        return String(format: "%d:%02d", minutes, secs)
+    private func formatDuration(_ seconds: Double) -> String {
+        let total = Int(seconds)
+        return String(format: "%d:%02d", total / 60, total % 60)
     }
 }
 

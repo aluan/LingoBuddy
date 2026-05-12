@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HomeView: View {
     let onStartSpeaking: () -> Void
+    let onVideoLearning: () -> Void
 
     private let morningGradient = LinearGradient(
         colors: [
@@ -70,6 +71,8 @@ struct HomeView: View {
                     miniStat(title: "Stars", value: "18", icon: "star.fill", tint: Color(red: 0.94, green: 0.56, blue: 0.13))
                     miniStat(title: "Streak", value: "4", icon: "flame.fill", tint: Color(red: 0.90, green: 0.28, blue: 0.18))
                 }
+
+                videoLearningCard
 
                 Spacer(minLength: 0)
 
@@ -142,6 +145,42 @@ struct HomeView: View {
         )
     }
 
+    private var videoLearningCard: some View {
+        Button(action: onVideoLearning) {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(Color(red: 0.13, green: 0.53, blue: 0.45).opacity(0.14))
+                    Image(systemName: "play.rectangle.fill")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundStyle(Color(red: 0.13, green: 0.53, blue: 0.45))
+                }
+                .frame(width: 46, height: 46)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Video Learning")
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
+                    Text("Learn English from Bilibili videos")
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.secondary)
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(.white.opacity(0.82))
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
     private var tabBar: some View {
         HStack {
             tabItem("Home", "house.fill", isSelected: true)
@@ -175,5 +214,5 @@ struct HomeView: View {
 }
 
 #Preview {
-    HomeView(onStartSpeaking: {})
+    HomeView(onStartSpeaking: {}, onVideoLearning: {})
 }

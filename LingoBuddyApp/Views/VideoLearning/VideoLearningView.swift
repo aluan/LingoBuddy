@@ -1,11 +1,12 @@
 import SwiftUI
 
 struct VideoLearningView: View {
-    let onBack: () -> Void
+    var onBack: (() -> Void)? = nil
     @StateObject private var viewModel = VideoLearningViewModel()
     @State private var urlInput = ""
     @State private var showProcessing = false
     @State private var processingVideoId: String?
+    @State private var selectedVideo: VideoContent? = nil
 
     private let pageGradient = LinearGradient(
         colors: [
@@ -54,24 +55,31 @@ struct VideoLearningView: View {
                 })
             }
         }
+        .sheet(item: $selectedVideo) { video in
+            VideoDetailView(video: video, onBack: {
+                selectedVideo = nil
+            })
+        }
     }
 
     private var topBar: some View {
         HStack(spacing: 12) {
-            Button(action: onBack) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
-                    .frame(width: 42, height: 42)
-                    .background(Circle().fill(.white.opacity(0.78)))
+            if let onBack {
+                Button(action: onBack) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
+                        .frame(width: 42, height: 42)
+                        .background(Circle().fill(.white.opacity(0.78)))
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Video Learning")
+                Text(onBack == nil ? "LingoBuddy" : "Video Learning")
                     .font(.system(size: 23, weight: .bold, design: .rounded))
                     .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
-                Text("Learn from videos")
+                Text("Learn English from videos")
                     .font(.system(size: 14, weight: .medium, design: .rounded))
                     .foregroundStyle(.secondary)
             }
@@ -86,9 +94,10 @@ struct VideoLearningView: View {
                 .font(.system(size: 14, weight: .bold, design: .rounded))
                 .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
 
-            HStack(spacing: 12) {
-                TextField("https://www.bilibili.com/video/BV...", text: $urlInput)
+            HStack(alignment: .top, spacing: 12) {
+                TextField("粘贴链接或分享内容，如【标题】https://b23.tv/...", text: $urlInput, axis: .vertical)
                     .textFieldStyle(.plain)
+                    .lineLimit(1...3)
                     .padding(12)
                     .background(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -101,6 +110,7 @@ struct VideoLearningView: View {
                         .foregroundStyle(Color(red: 0.13, green: 0.53, blue: 0.45))
                 }
                 .buttonStyle(.plain)
+                .padding(.top, 10)
                 .disabled(urlInput.isEmpty || viewModel.isSubmitting)
             }
 
@@ -140,7 +150,7 @@ struct VideoLearningView: View {
             VStack(spacing: 12) {
                 ForEach(viewModel.videos) { video in
                     VideoCard(video: video, onTap: {
-                        // Navigate to detail
+                        selectedVideo = video
                     })
                 }
             }
@@ -237,10 +247,9 @@ struct VideoCard: View {
         }
     }
 
-    private func formatDuration(_ seconds: Int) -> String {
-        let minutes = seconds / 60
-        let secs = seconds % 60
-        return String(format: "%d:%02d", minutes, secs)
+    private func formatDuration(_ seconds: Double) -> String {
+        let total = Int(seconds)
+        return String(format: "%d:%02d", total / 60, total % 60)
     }
 }
 
@@ -277,5 +286,5 @@ final class VideoLearningViewModel: ObservableObject {
 }
 
 #Preview {
-    VideoLearningView(onBack: {})
+    VideoLearningView()
 }

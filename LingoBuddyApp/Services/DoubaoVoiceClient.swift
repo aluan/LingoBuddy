@@ -35,6 +35,7 @@ final class DoubaoVoiceClient: NSObject, ObservableObject {
     @Published var voiceState: VoiceInteractionState = .thinking
     @Published var childTranscript = "Tap the mic to start your quest!"
     @Published var astraReply = "Hi! Ready for a dragon quest?"
+    @Published var messages: [ChatMessage] = []
     @Published var totalStars = 18
     @Published var isConnected = false
     @Published var isRecording = false
@@ -63,11 +64,15 @@ final class DoubaoVoiceClient: NSObject, ObservableObject {
     private var speechEngine: SpeechEngine?
     private var sessionId: String?
     private var conversationId: String?
+    private var videoId: String?
     private var currentTranscript = ""
     private var currentReply = ""
     private var currentTranscriptSaved = false
+    private var pendingRemoteMessages: [(role: String, text: String)] = []
 
     private let config: DoubaoConfig.Type = DoubaoConfig.self
+    private let voiceSessionService = VoiceSessionService()
+    private let videoLearningService = VideoLearningService()
     private lazy var dialogStore = LocalDialogStore(dialogId: config.dialogId)
 
     override init() {
@@ -76,10 +81,11 @@ final class DoubaoVoiceClient: NSObject, ObservableObject {
         super.init()
     }
 
-    init(videoTitle: String, videoContext: String) {
+    init(videoId: String, videoTitle: String, videoContext: String) {
         let savedVoiceId = UserDefaults.standard.string(forKey: Self.selectedVoiceKey)
         self.selectedVoice = savedVoiceId.flatMap(DoubaoVoiceOption.init(rawValue:)) ?? .dacey
         super.init()
+        self.videoId = videoId
         self.videoContext = videoContext
         self.videoBotName = "Buddy"
         self.videoSystemRole = Self.buildVideoSystemRole(title: videoTitle, context: videoContext)
@@ -133,6 +139,9 @@ Your mission:
 
         sessionId = nil
         conversationId = nil
+        Task {
+            await startBackendSessionAndLoadHistory()
+        }
         initializeEngine()
     }
 
@@ -151,8 +160,79 @@ Your mission:
         }
 
         uninitializeEngine()
+        let endedSessionId = sessionId
         sessionId = nil
         conversationId = nil
+
+        if let endedSessionId {
+            Task {
+                try? await voiceSessionService.endSession(sessionId: endedSessionId)
+            }
+        }
+    }
+
+    private func startBackendSessionAndLoadHistory() async {
+        do {
+            let response = try await voiceSessionService.startSession(videoId: videoId)
+            sessionId = response.sessionId
+            conversationId = response.conversationId
+
+            flushPendingRemoteMessages()
+
+            if let videoId {
+                let storedMessages = try await videoLearningService.fetchChatMessages(videoId: videoId)
+                let storedChatMessages = storedMessages.map {
+                    ChatMessage(id: $0.id, role: $0.role, text: $0.text)
+                }
+                if storedChatMessages.count >= messages.count {
+                    messages = storedChatMessages
+                }
+            }
+        } catch {
+            debugLog("Failed to start backend voice session: \(error.localizedDescription)")
+        }
+    }
+
+    private func appendVisibleMessage(role: String, text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        messages.append(ChatMessage(role: role, text: trimmed))
+    }
+
+    private func saveTranscriptToBackend(role: String, text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        guard sessionId != nil else {
+            pendingRemoteMessages.append((role: role, text: trimmed))
+            return
+        }
+
+        saveTranscriptToBackendNow(role: role, text: trimmed)
+    }
+
+    private func flushPendingRemoteMessages() {
+        let pending = pendingRemoteMessages
+        pendingRemoteMessages.removeAll()
+
+        for message in pending {
+            saveTranscriptToBackendNow(role: message.role, text: message.text)
+        }
+    }
+
+    private func saveTranscriptToBackendNow(role: String, text: String) {
+        guard let sessionId else { return }
+
+        Task {
+            do {
+                _ = try await voiceSessionService.saveTranscript(
+                    sessionId: sessionId,
+                    text: text,
+                    role: role == "user" ? "child" : "astra"
+                )
+            } catch {
+                debugLog("Failed to save voice transcript: \(error.localizedDescription)")
+            }
+        }
     }
 
     func cancelResponse() {
@@ -426,15 +506,19 @@ extension DoubaoVoiceClient: SpeechEngineDelegate {
         let text = currentTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, !currentTranscriptSaved else { return }
         dialogStore.append(role: LocalDialogStore.userRole, text: text)
+        appendVisibleMessage(role: "user", text: text)
+        saveTranscriptToBackend(role: "user", text: text)
         currentTranscriptSaved = true
-        debugLog("Saved user transcript locally for dialog_id=\(config.dialogId)")
+        debugLog("Saved user transcript locally and remotely for dialog_id=\(config.dialogId)")
     }
 
     private func saveCurrentReplyIfNeeded() {
         let text = currentReply.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
         dialogStore.append(role: LocalDialogStore.assistantRole, text: text)
-        debugLog("Saved assistant reply locally for dialog_id=\(config.dialogId)")
+        appendVisibleMessage(role: "assistant", text: text)
+        saveTranscriptToBackend(role: "assistant", text: text)
+        debugLog("Saved assistant reply locally and remotely for dialog_id=\(config.dialogId)")
     }
 
     private func handleASRResponse(data: Data?) {

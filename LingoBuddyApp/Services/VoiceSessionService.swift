@@ -1,5 +1,46 @@
 import Foundation
 
+enum BackendURLSession {
+    static func data(for request: URLRequest) async throws -> (Data, URLResponse) {
+        try await retryOnceAfterLocalNetworkPermissionIfNeeded {
+            try await URLSession.shared.data(for: request)
+        }
+    }
+
+    static func bytes(for request: URLRequest) async throws -> (URLSession.AsyncBytes, URLResponse) {
+        try await retryOnceAfterLocalNetworkPermissionIfNeeded {
+            try await URLSession.shared.bytes(for: request)
+        }
+    }
+
+    private static func retryOnceAfterLocalNetworkPermissionIfNeeded<T>(
+        operation: () async throws -> T
+    ) async throws -> T {
+        do {
+            return try await operation()
+        } catch {
+            guard shouldRetryAfterPermissionPrompt(error) else { throw error }
+            try await Task.sleep(nanoseconds: 700_000_000)
+            return try await operation()
+        }
+    }
+
+    private static func shouldRetryAfterPermissionPrompt(_ error: Error) -> Bool {
+        let nsError = error as NSError
+        guard nsError.domain == NSURLErrorDomain else { return false }
+
+        let retryableCodes: Set<Int> = [
+            NSURLErrorNotConnectedToInternet,
+            NSURLErrorNetworkConnectionLost,
+            NSURLErrorCannotConnectToHost,
+            NSURLErrorTimedOut,
+            NSURLErrorCannotFindHost
+        ]
+
+        return retryableCodes.contains(nsError.code)
+    }
+}
+
 @MainActor
 final class VoiceSessionService: ObservableObject {
     private let baseURL: String
@@ -54,7 +95,7 @@ final class VoiceSessionService: ObservableObject {
         ]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await BackendURLSession.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             throw VoiceSessionError.invalidResponse
@@ -72,7 +113,7 @@ final class VoiceSessionService: ObservableObject {
         let body = TranscriptRequest(text: text, role: role)
         request.httpBody = try JSONEncoder().encode(body)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await BackendURLSession.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             throw VoiceSessionError.invalidResponse
@@ -90,7 +131,7 @@ final class VoiceSessionService: ObservableObject {
         let body = RewardRequest(stars: stars)
         request.httpBody = try JSONEncoder().encode(body)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await BackendURLSession.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             throw VoiceSessionError.invalidResponse
@@ -105,7 +146,7 @@ final class VoiceSessionService: ObservableObject {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await BackendURLSession.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             throw VoiceSessionError.invalidResponse

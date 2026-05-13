@@ -5,6 +5,8 @@ import { ProgressService } from '../progress/progress.service';
 import { ConversationsService } from '../conversations/conversations.service';
 import { RewardsService } from '../rewards/rewards.service';
 
+const VIDEO_LEARNING_PROFILE_ID = '000000000000000000000001';
+
 @Injectable()
 export class VoiceSessionService {
   private readonly logger = new Logger(VoiceSessionService.name);
@@ -15,6 +17,7 @@ export class VoiceSessionService {
       conversationId: string;
       profileId: string;
       taskId?: string;
+      videoId?: string;
       startedAt: Date;
     }
   >();
@@ -33,25 +36,18 @@ export class VoiceSessionService {
     const todayTask = taskId ? undefined : await this.tasks.getTodayTask();
     const finalTaskId = taskId ?? todayTask?.id;
 
-    // Load video context if videoId is provided
-    let videoContext: string | undefined;
-    if (videoId) {
-      // TODO: Load video transcript from VideoLearningService
-      // For now, we'll pass videoId to conversation
-    }
+    const profileId = videoId ? VIDEO_LEARNING_PROFILE_ID : profile.id;
 
-    const conversation = await this.conversations.start(
-      profile.id,
-      finalTaskId,
-      videoId,
-      videoContext,
-    );
+    const conversation = videoId
+      ? await this.conversations.getOrStartVideoConversation(profileId, videoId)
+      : await this.conversations.start(profileId, finalTaskId);
 
     this.sessions.set(sessionId, {
       sessionId,
       conversationId: conversation.id,
-      profileId: profile.id,
+      profileId,
       taskId: finalTaskId,
+      videoId,
       startedAt: new Date(),
     });
 
@@ -117,7 +113,9 @@ export class VoiceSessionService {
       throw new Error(`Session not found: ${sessionId}`);
     }
 
-    await this.conversations.end(session.conversationId);
+    if (!session.videoId) {
+      await this.conversations.end(session.conversationId);
+    }
     this.sessions.delete(sessionId);
 
     const duration = Date.now() - session.startedAt.getTime();

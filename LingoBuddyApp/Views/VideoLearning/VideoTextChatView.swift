@@ -27,7 +27,10 @@ struct VideoTextChatView: View {
 
     var body: some View {
         ZStack {
-            pageGradient.ignoresSafeArea()
+            pageGradient
+                .ignoresSafeArea()
+                .contentShape(Rectangle())
+                .onTapGesture(perform: dismissKeyboard)
 
             VStack(spacing: 0) {
                 topBar
@@ -36,6 +39,9 @@ struct VideoTextChatView: View {
 
                 inputBar
             }
+        }
+        .task {
+            await viewModel.loadMessages()
         }
     }
 
@@ -70,36 +76,40 @@ struct VideoTextChatView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(spacing: 12) {
-                    if viewModel.messages.isEmpty {
+                    if viewModel.messages.isEmpty && !viewModel.isLoadingHistory {
                         emptyState
                     } else {
                         ForEach(viewModel.messages) { message in
-                            ChatBubble(message: message)
-                                .id(message.id)
+                            ChatBubble(
+                                message: message,
+                                isStreaming: message.id == viewModel.streamingMessageID
+                            )
+                            .id(message.id)
                         }
                     }
 
-                    if viewModel.isLoading {
-                        HStack {
-                            ProgressView()
-                                .tint(Color(red: 0.86, green: 0.38, blue: 0.18))
-                            Text("Astra is thinking...")
-                                .font(.system(size: 14, weight: .medium, design: .rounded))
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding()
-                    }
+                    Color.clear
+                        .frame(height: 1)
+                        .id("messageListBottom")
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
             }
             .onChange(of: viewModel.messages.count) { _ in
-                if let lastMessage = viewModel.messages.last {
-                    withAnimation {
-                        proxy.scrollTo(lastMessage.id, anchor: .bottom)
-                    }
-                }
+                scrollToBottom(proxy)
             }
+            .onChange(of: viewModel.streamedTextVersion) { _ in
+                scrollToBottom(proxy)
+            }
+            .scrollDismissesKeyboard(.interactively)
+            .contentShape(Rectangle())
+            .onTapGesture(perform: dismissKeyboard)
+        }
+    }
+
+    private func scrollToBottom(_ proxy: ScrollViewProxy) {
+        withAnimation(.easeOut(duration: 0.2)) {
+            proxy.scrollTo("messageListBottom", anchor: .bottom)
         }
     }
 
@@ -119,6 +129,8 @@ struct VideoTextChatView: View {
                 .multilineTextAlignment(.center)
         }
         .padding(40)
+        .contentShape(Rectangle())
+        .onTapGesture(perform: dismissKeyboard)
     }
 
     private var inputBar: some View {
@@ -132,6 +144,8 @@ struct VideoTextChatView: View {
                         .fill(.white.opacity(0.78))
                 )
                 .focused($isInputFocused)
+                .submitLabel(.send)
+                .onSubmit(sendMessage)
 
             Button(action: sendMessage) {
                 Image(systemName: "arrow.up.circle.fill")
@@ -148,12 +162,22 @@ struct VideoTextChatView: View {
         .background(.white.opacity(0.5))
     }
 
+    private func dismissKeyboard() {
+        isInputFocused = false
+        UIApplication.shared.sendAction(
+            #selector(UIResponder.resignFirstResponder),
+            to: nil,
+            from: nil,
+            for: nil
+        )
+    }
+
     private func sendMessage() {
         let message = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !message.isEmpty else { return }
 
         inputText = ""
-        isInputFocused = false
+        dismissKeyboard()
 
         Task {
             await viewModel.sendMessage(message)
@@ -163,6 +187,7 @@ struct VideoTextChatView: View {
 
 struct ChatBubble: View {
     let message: ChatMessage
+    var isStreaming = false
 
     var body: some View {
         HStack {
@@ -179,7 +204,7 @@ struct ChatBubble: View {
                 }
                 .foregroundStyle(bubbleColor)
 
-                Text(message.text)
+                Text(displayText)
                     .font(.system(size: 16, weight: .medium, design: .rounded))
                     .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
                     .fixedSize(horizontal: false, vertical: true)
@@ -200,6 +225,11 @@ struct ChatBubble: View {
         }
     }
 
+    private var displayText: String {
+        guard isStreaming else { return message.text }
+        return message.text.isEmpty ? "▌" : "\(message.text)▌"
+    }
+
     private var bubbleColor: Color {
         message.role == "user" ?
             Color(red: 0.10, green: 0.45, blue: 0.74) :
@@ -208,16 +238,25 @@ struct ChatBubble: View {
 }
 
 struct ChatMessage: Identifiable {
-    let id = UUID()
+    let id: String
     let role: String
-    let text: String
+    var text: String
+
+    init(id: String = UUID().uuidString, role: String, text: String) {
+        self.id = id
+        self.role = role
+        self.text = text
+    }
 }
 
 @MainActor
 final class VideoTextChatViewModel: ObservableObject {
     @Published var messages: [ChatMessage] = []
     @Published var isLoading = false
+    @Published var isLoadingHistory = false
     @Published var errorMessage: String?
+    @Published var streamingMessageID: String?
+    @Published var streamedTextVersion = 0
 
     private let videoId: String
     private let service = VideoLearningService()
@@ -226,23 +265,71 @@ final class VideoTextChatViewModel: ObservableObject {
         self.videoId = videoId
     }
 
+    func loadMessages() async {
+        guard messages.isEmpty else { return }
+
+        isLoadingHistory = true
+        errorMessage = nil
+
+        do {
+            let storedMessages = try await service.fetchChatMessages(videoId: videoId)
+            messages = storedMessages.map {
+                ChatMessage(id: $0.id, role: $0.role, text: $0.text)
+            }
+            streamedTextVersion += 1
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+
+        isLoadingHistory = false
+    }
+
     func sendMessage(_ text: String) async {
         messages.append(ChatMessage(role: "user", text: text))
+        let assistantMessage = ChatMessage(role: "assistant", text: "")
+        messages.append(assistantMessage)
+        streamingMessageID = assistantMessage.id
+        streamedTextVersion += 1
         isLoading = true
         errorMessage = nil
 
         do {
-            let reply = try await service.sendChatMessage(videoId: videoId, message: text)
-            messages.append(ChatMessage(role: "assistant", text: reply))
+            for try await delta in service.streamChatMessage(videoId: videoId, message: text) {
+                append(delta, toMessageID: assistantMessage.id)
+            }
+
+            if messageText(for: assistantMessage.id).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                replaceMessage(
+                    assistantMessage.id,
+                    with: "Sorry, I didn't receive a response. Please try again."
+                )
+            }
         } catch {
             errorMessage = error.localizedDescription
-            messages.append(ChatMessage(
-                role: "assistant",
-                text: "Sorry, I couldn't process your message. Please try again."
-            ))
+            replaceMessage(
+                assistantMessage.id,
+                with: "Sorry, I couldn't process your message. Please try again."
+            )
         }
 
+        streamingMessageID = nil
         isLoading = false
+    }
+
+    private func append(_ delta: String, toMessageID id: String) {
+        guard let index = messages.firstIndex(where: { $0.id == id }) else { return }
+        messages[index].text += delta
+        streamedTextVersion += 1
+    }
+
+    private func replaceMessage(_ id: String, with text: String) {
+        guard let index = messages.firstIndex(where: { $0.id == id }) else { return }
+        messages[index].text = text
+        streamedTextVersion += 1
+    }
+
+    private func messageText(for id: String) -> String {
+        messages.first(where: { $0.id == id })?.text ?? ""
     }
 }
 

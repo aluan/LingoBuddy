@@ -56,6 +56,52 @@ export class ConversationsService {
     });
   }
 
+  async getOrStartVideoConversation(
+    profileId: string,
+    videoId: string,
+    videoContext?: string,
+  ): Promise<ConversationDocument> {
+    const existing = await this.conversationModel
+      .findOne({
+        profileId: new Types.ObjectId(profileId),
+        videoId: new Types.ObjectId(videoId),
+        status: 'active',
+      })
+      .sort({ startedAt: -1 })
+      .exec();
+
+    if (existing) {
+      return existing;
+    }
+
+    return this.start(profileId, undefined, videoId, videoContext);
+  }
+
+  async messagesForVideoConversation(profileId: string, videoId: string) {
+    const conversation = await this.getOrStartVideoConversation(profileId, videoId);
+    const messages = await this.messagesForConversation(conversation.id);
+
+    return {
+      conversation,
+      messages,
+    };
+  }
+
+  async recentMessagesForVideoConversation(
+    profileId: string,
+    videoId: string,
+    limit = 12,
+  ) {
+    const conversation = await this.getOrStartVideoConversation(profileId, videoId);
+    const messages = await this.messageModel
+      .find({ conversationId: conversation._id })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .exec();
+
+    return messages.reverse();
+  }
+
   async newWordsForConversation(conversationId: string): Promise<string[]> {
     const messages = await this.messageModel.find({ conversationId: new Types.ObjectId(conversationId) }).exec();
     return [...new Set(messages.flatMap((message) => message.newWords))];

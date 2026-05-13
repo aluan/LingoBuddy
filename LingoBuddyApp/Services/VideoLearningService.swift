@@ -39,7 +39,7 @@ final class VideoLearningService: ObservableObject {
         let body = ["url": url]
         request.httpBody = try JSONEncoder().encode(body)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await BackendURLSession.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -55,7 +55,7 @@ final class VideoLearningService: ObservableObject {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "GET"
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await BackendURLSession.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -70,7 +70,7 @@ final class VideoLearningService: ObservableObject {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "GET"
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await BackendURLSession.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -86,7 +86,7 @@ final class VideoLearningService: ObservableObject {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "GET"
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await BackendURLSession.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -101,7 +101,7 @@ final class VideoLearningService: ObservableObject {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "DELETE"
 
-        let (_, response) = try await URLSession.shared.data(for: request)
+        let (_, response) = try await BackendURLSession.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -111,24 +111,82 @@ final class VideoLearningService: ObservableObject {
 
     // MARK: - Chat
 
-    func sendChatMessage(videoId: String, message: String) async throws -> String {
-        let endpoint = URL(string: "\(baseURL)/video-learning/\(videoId)/chat")!
+
+    func fetchChatMessages(videoId: String) async throws -> [StoredChatMessage] {
+        let endpoint = URL(string: "\(baseURL)/video-learning/\(videoId)/chat/messages")!
         var request = URLRequest(url: endpoint)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpMethod = "GET"
 
-        let body = ["message": message]
-        request.httpBody = try JSONEncoder().encode(body)
-
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await BackendURLSession.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
             throw VideoLearningError.invalidResponse
         }
 
-        let result = try JSONDecoder().decode(ChatResponse.self, from: data)
-        return result.reply
+        let result = try decoder.decode(ChatHistoryResponse.self, from: data)
+        return result.messages
+    }
+
+    func sendChatMessage(videoId: String, message: String) async throws -> String {
+        var reply = ""
+        for try await delta in streamChatMessage(videoId: videoId, message: message) {
+            reply += delta
+        }
+        return reply
+    }
+
+    nonisolated func streamChatMessage(videoId: String, message: String) -> AsyncThrowingStream<String, Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    let endpoint = await self.chatStreamEndpoint(videoId: videoId)
+                    var request = URLRequest(url: endpoint)
+                    request.httpMethod = "POST"
+                    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                    request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+
+                    let body = ["message": message]
+                    request.httpBody = try JSONEncoder().encode(body)
+
+                    let (bytes, response) = try await BackendURLSession.bytes(for: request)
+
+                    guard let httpResponse = response as? HTTPURLResponse,
+                          (200...299).contains(httpResponse.statusCode) else {
+                        throw VideoLearningError.invalidResponse
+                    }
+
+                    for try await line in bytes.lines {
+                        guard line.hasPrefix("data:") else { continue }
+
+                        let payload = line.dropFirst(5).trimmingCharacters(in: .whitespaces)
+                        if payload == "[DONE]" { break }
+                        guard !payload.isEmpty else { continue }
+
+                        let event = try JSONDecoder().decode(ChatStreamEvent.self, from: Data(payload.utf8))
+                        if let error = event.error {
+                            throw VideoLearningError.serverError(error)
+                        }
+                        if let delta = event.delta, !delta.isEmpty {
+                            continuation.yield(delta)
+                        }
+                    }
+
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+
+            continuation.onTermination = { _ in
+                task.cancel()
+            }
+        }
+    }
+
+
+    private func chatStreamEndpoint(videoId: String) -> URL {
+        URL(string: "\(baseURL)/video-learning/\(videoId)/chat/stream")!
     }
 
     // MARK: - Quiz
@@ -142,7 +200,7 @@ final class VideoLearningService: ObservableObject {
         let body = ["difficulty": difficulty, "questionCount": questionCount] as [String : Any]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await BackendURLSession.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -157,7 +215,7 @@ final class VideoLearningService: ObservableObject {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "GET"
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await BackendURLSession.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -177,7 +235,7 @@ final class VideoLearningService: ObservableObject {
         let body = ["answers": answers]
         request.httpBody = try JSONEncoder().encode(body)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await BackendURLSession.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -192,6 +250,7 @@ enum VideoLearningError: LocalizedError {
     case invalidResponse
     case networkError
     case decodingError
+    case serverError(String)
 
     var errorDescription: String? {
         switch self {
@@ -201,6 +260,8 @@ enum VideoLearningError: LocalizedError {
             return "Network connection failed"
         case .decodingError:
             return "Failed to decode response"
+        case .serverError(let message):
+            return message
         }
     }
 }

@@ -7,6 +7,7 @@ struct VideoLearningView: View {
     @State private var showProcessing = false
     @State private var processingVideoId: String?
     @State private var selectedVideo: VideoContent? = nil
+    @FocusState private var isURLInputFocused: Bool
 
     private let pageGradient = LinearGradient(
         colors: [
@@ -19,7 +20,11 @@ struct VideoLearningView: View {
 
     var body: some View {
         ZStack {
-            pageGradient.ignoresSafeArea()
+            pageGradient
+                .ignoresSafeArea()
+                .onTapGesture {
+                    isURLInputFocused = false
+                }
 
             VStack(spacing: 20) {
                 topBar
@@ -56,9 +61,18 @@ struct VideoLearningView: View {
             }
         }
         .sheet(item: $selectedVideo) { video in
-            VideoDetailView(video: video, onBack: {
-                selectedVideo = nil
-            })
+            VideoDetailView(
+                video: video,
+                onBack: {
+                    selectedVideo = nil
+                },
+                onDelete: {
+                    selectedVideo = nil
+                    Task {
+                        await viewModel.deleteVideo(videoId: video.id)
+                    }
+                }
+            )
         }
     }
 
@@ -89,42 +103,138 @@ struct VideoLearningView: View {
     }
 
     private var urlInputSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Bilibili Video URL")
-                .font(.system(size: 14, weight: .bold, design: .rounded))
-                .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 8) {
+                Image(systemName: "link.circle.fill")
+                    .font(.system(size: 18))
+                    .foregroundStyle(Color(red: 0.13, green: 0.53, blue: 0.45))
 
-            HStack(alignment: .top, spacing: 12) {
-                TextField("粘贴链接或分享内容，如【标题】https://b23.tv/...", text: $urlInput, axis: .vertical)
-                    .textFieldStyle(.plain)
-                    .lineLimit(1...3)
-                    .padding(12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(.white.opacity(0.78))
-                    )
+                Text("添加视频")
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
 
-                Button(action: submitVideo) {
-                    Image(systemName: "arrow.right.circle.fill")
-                        .font(.system(size: 24))
-                        .foregroundStyle(Color(red: 0.13, green: 0.53, blue: 0.45))
+                Spacer()
+
+                if !urlInput.isEmpty {
+                    Button(action: { urlInput = "" }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 16))
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .transition(.scale.combined(with: .opacity))
                 }
-                .buttonStyle(.plain)
-                .padding(.top, 10)
-                .disabled(urlInput.isEmpty || viewModel.isSubmitting)
+            }
+
+            VStack(spacing: 0) {
+                HStack(spacing: 12) {
+                    TextField("", text: $urlInput, axis: .vertical)
+                        .textFieldStyle(.plain)
+                        .lineLimit(1...3)
+                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
+                        .placeholder(when: urlInput.isEmpty) {
+                            Text("粘贴 B 站链接或分享内容")
+                                .font(.system(size: 15, weight: .medium, design: .rounded))
+                                .foregroundStyle(.secondary.opacity(0.6))
+                        }
+                        .focused($isURLInputFocused)
+                        .submitLabel(.done)
+                        .onSubmit {
+                            if !urlInput.isEmpty {
+                                submitVideo()
+                            }
+                        }
+
+                    if !urlInput.isEmpty {
+                        Button(action: submitVideo) {
+                            Group {
+                                if viewModel.isSubmitting {
+                                    ProgressView()
+                                        .progressViewStyle(.circular)
+                                        .scaleEffect(0.8)
+                                } else {
+                                    Image(systemName: "arrow.up.circle.fill")
+                                        .font(.system(size: 28))
+                                }
+                            }
+                            .foregroundStyle(Color(red: 0.13, green: 0.53, blue: 0.45))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(viewModel.isSubmitting)
+                        .transition(.scale.combined(with: .opacity))
+                    } else {
+                        Button(action: pasteFromClipboard) {
+                            VStack(spacing: 2) {
+                                Image(systemName: "doc.on.clipboard")
+                                    .font(.system(size: 18))
+                                Text("粘贴")
+                                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                            }
+                            .foregroundStyle(Color(red: 0.13, green: 0.53, blue: 0.45))
+                            .frame(width: 44)
+                        }
+                        .buttonStyle(.plain)
+                        .transition(.scale.combined(with: .opacity))
+                    }
+                }
+                .padding(16)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(.white)
+                        .shadow(color: isURLInputFocused ? Color(red: 0.13, green: 0.53, blue: 0.45).opacity(0.15) : .black.opacity(0.04), radius: isURLInputFocused ? 8 : 4, y: 2)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .strokeBorder(
+                            isURLInputFocused ? Color(red: 0.13, green: 0.53, blue: 0.45).opacity(0.3) : .clear,
+                            lineWidth: 2
+                        )
+                )
+
+                if !urlInput.isEmpty && !isURLInputFocused {
+                    Text("示例：https://b23.tv/xxx 或【标题】https://b23.tv/xxx")
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(.secondary.opacity(0.7))
+                        .padding(.top, 8)
+                        .padding(.horizontal, 4)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
             }
 
             if let error = viewModel.errorMessage {
-                Text(error)
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
-                    .foregroundStyle(.red)
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 12))
+                    Text(error)
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                }
+                .foregroundStyle(.red)
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(.red.opacity(0.08))
+                )
+                .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
-        .padding(16)
+        .padding(20)
         .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(.white.opacity(0.70))
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(.white.opacity(0.85))
+                .shadow(color: .black.opacity(0.06), radius: 12, y: 4)
         )
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: urlInput.isEmpty)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isURLInputFocused)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: viewModel.errorMessage)
+    }
+
+    private func pasteFromClipboard() {
+        if let clipboardString = UIPasteboard.general.string {
+            urlInput = clipboardString
+            isURLInputFocused = true
+        }
     }
 
     private var emptyState: some View {
@@ -143,6 +253,9 @@ struct VideoLearningView: View {
                 .multilineTextAlignment(.center)
         }
         .padding(40)
+        .onTapGesture {
+            isURLInputFocused = false
+        }
     }
 
     private var videoList: some View {
@@ -155,9 +268,15 @@ struct VideoLearningView: View {
                 }
             }
         }
+        .scrollDismissesKeyboard(.interactively)
+        .onTapGesture {
+            isURLInputFocused = false
+        }
     }
 
     private func submitVideo() {
+        isURLInputFocused = false
+
         Task {
             do {
                 let videoId = try await viewModel.submitVideo(url: urlInput)
@@ -283,8 +402,31 @@ final class VideoLearningViewModel: ObservableObject {
 
         return try await service.submitVideo(url: url)
     }
+
+    func deleteVideo(videoId: String) async {
+        do {
+            try await service.deleteVideo(videoId: videoId)
+            await loadVideos()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
 }
 
 #Preview {
     VideoLearningView()
+}
+
+// MARK: - View Extensions
+extension View {
+    func placeholder<Content: View>(
+        when shouldShow: Bool,
+        alignment: Alignment = .leading,
+        @ViewBuilder placeholder: () -> Content
+    ) -> some View {
+        ZStack(alignment: alignment) {
+            placeholder().opacity(shouldShow ? 1 : 0)
+            self
+        }
+    }
 }

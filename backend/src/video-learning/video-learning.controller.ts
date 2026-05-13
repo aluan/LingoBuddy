@@ -6,12 +6,29 @@ import {
   Body,
   Param,
   Logger,
+  Res,
 } from '@nestjs/common';
 import axios from 'axios';
 import { VideoLearningService } from './video-learning.service';
 import { VideoProcessorService } from './video-processor.service';
 import { QuizService } from './quiz.service';
 import { VideoChatService } from './video-chat.service';
+import { ConversationsService } from '../conversations/conversations.service';
+import { MessageDocument } from '../conversations/message.schema';
+
+type StreamResponse = NodeJS.WritableStream & {
+  setHeader: (name: string, value: string) => void;
+  status: (code: number) => void;
+  headersSent: boolean;
+  flushHeaders?: () => void;
+};
+
+const CURRENT_PROFILE_ID = '000000000000000000000001';
+
+type LlmHistoryMessage = {
+  role: 'assistant' | 'user';
+  content: string;
+};
 
 @Controller('video-learning')
 export class VideoLearningController {
@@ -22,6 +39,7 @@ export class VideoLearningController {
     private readonly videoProcessorService: VideoProcessorService,
     private readonly quizService: QuizService,
     private readonly videoChatService: VideoChatService,
+    private readonly conversationsService: ConversationsService,
   ) {}
 
   @Post('submit')
@@ -54,7 +72,7 @@ export class VideoLearningController {
     const videoId = bvMatch[0];
 
     // TODO: Get current profile ID from session/auth
-    const profileId = '000000000000000000000001';
+    const profileId = CURRENT_PROFILE_ID;
 
     const video = await this.videoLearningService.create(
       profileId,
@@ -95,7 +113,7 @@ export class VideoLearningController {
   @Get('list')
   async listVideos() {
     // TODO: Get current profile ID from session/auth
-    const profileId = '000000000000000000000001';
+    const profileId = CURRENT_PROFILE_ID;
 
     const videos = await this.videoLearningService.findByProfileId(profileId);
 
@@ -130,6 +148,25 @@ export class VideoLearningController {
     };
   }
 
+  @Get(':videoId/chat/messages')
+  async getChatMessages(@Param('videoId') videoId: string) {
+    const { conversation, messages } =
+      await this.conversationsService.messagesForVideoConversation(
+        CURRENT_PROFILE_ID,
+        videoId,
+      );
+
+    return {
+      conversationId: conversation.id,
+      messages: messages.map((message) => ({
+        id: message.id,
+        role: message.role === 'child' ? 'user' : 'assistant',
+        text: message.text,
+        createdAt: message.createdAt,
+      })),
+    };
+  }
+
   @Post(':videoId/chat')
   async chat(
     @Param('videoId') videoId: string,
@@ -141,12 +178,109 @@ export class VideoLearningController {
       throw new Error('Video transcript not ready');
     }
 
-    const reply = await this.videoChatService.chat(
-      video.transcriptText || '',
+    const conversation = await this.conversationsService.getOrStartVideoConversation(
+      CURRENT_PROFILE_ID,
+      videoId,
+      video.transcriptText,
+    );
+    const history = await this.chatHistory(CURRENT_PROFILE_ID, videoId);
+
+    await this.conversationsService.addMessage(
+      conversation.id,
+      'child',
       body.message,
     );
 
-    return { reply };
+    const reply = await this.videoChatService.chat(
+      video.transcriptText || '',
+      body.message,
+      history,
+    );
+
+    await this.conversationsService.addMessage(conversation.id, 'astra', reply);
+
+    return { reply, conversationId: conversation.id };
+  }
+
+  @Post(':videoId/chat/stream')
+  async chatStream(
+    @Param('videoId') videoId: string,
+    @Body() body: { message: string },
+    @Res() res: StreamResponse,
+  ) {
+    const video = await this.videoLearningService.findById(videoId);
+
+    if (video.transcriptStatus !== 'completed') {
+      throw new Error('Video transcript not ready');
+    }
+
+    const conversation = await this.conversationsService.getOrStartVideoConversation(
+      CURRENT_PROFILE_ID,
+      videoId,
+      video.transcriptText,
+    );
+    const history = await this.chatHistory(CURRENT_PROFILE_ID, videoId);
+
+    await this.conversationsService.addMessage(
+      conversation.id,
+      'child',
+      body.message,
+    );
+
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders?.();
+
+    let fullReply = '';
+
+    try {
+      for await (const delta of this.videoChatService.chatStream(
+        video.transcriptText || '',
+        body.message,
+        history,
+      )) {
+        fullReply += delta;
+        res.write(`data: ${JSON.stringify({ delta })}\n\n`);
+      }
+
+      const savedMessage = fullReply.trim()
+        ? await this.conversationsService.addMessage(
+            conversation.id,
+            'astra',
+            fullReply,
+          )
+        : undefined;
+
+      res.write(`data: ${JSON.stringify({ done: true, conversationId: conversation.id, messageId: savedMessage?.id })}\n\n`);
+      res.write('data: [DONE]\n\n');
+      res.end();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Streaming chat failed: ${message}`);
+      if (!res.headersSent) {
+        res.status(500);
+      }
+      res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
+      res.end();
+    }
+  }
+
+
+  private async chatHistory(
+    profileId: string,
+    videoId: string,
+  ): Promise<LlmHistoryMessage[]> {
+    const messages = await this.conversationsService.recentMessagesForVideoConversation(
+      profileId,
+      videoId,
+      12,
+    );
+
+    return messages.map((message: MessageDocument) => ({
+      role: message.role === 'child' ? 'user' : 'assistant',
+      content: message.text,
+    }));
   }
 
   @Post(':videoId/generate-quiz')
@@ -168,7 +302,7 @@ export class VideoLearningController {
     );
 
     // TODO: Get current profile ID
-    const profileId = '000000000000000000000001';
+    const profileId = CURRENT_PROFILE_ID;
 
     const quiz = await this.videoLearningService.createQuiz(
       videoId,

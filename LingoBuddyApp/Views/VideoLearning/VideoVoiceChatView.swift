@@ -13,7 +13,7 @@ struct VideoVoiceChatView: View {
         self.videoTitle = videoTitle
         self.videoContext = videoContext
         self.onBack = onBack
-        _realtime = StateObject(wrappedValue: DoubaoVoiceClient(videoTitle: videoTitle, videoContext: videoContext))
+        _realtime = StateObject(wrappedValue: DoubaoVoiceClient(videoId: videoId, videoTitle: videoTitle, videoContext: videoContext))
     }
 
     private let pageGradient = LinearGradient(
@@ -29,46 +29,55 @@ struct VideoVoiceChatView: View {
         ZStack {
             pageGradient.ignoresSafeArea()
 
-            VStack(spacing: 18) {
+            VStack(spacing: 16) {
                 topBar
 
-                statusCard
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(spacing: 12) {
+                            if realtime.messages.isEmpty {
+                                transcriptBubble(
+                                    label: "You",
+                                    text: realtime.childTranscript,
+                                    icon: "person.fill",
+                                    tint: Color(red: 0.10, green: 0.45, blue: 0.74),
+                                    lineLimit: 3
+                                )
 
-                voicePicker
+                                transcriptBubble(
+                                    label: "Astra",
+                                    text: realtime.astraReply,
+                                    icon: "sparkles",
+                                    tint: Color(red: 0.86, green: 0.38, blue: 0.18),
+                                    lineLimit: nil
+                                )
+                            } else {
+                                ForEach(realtime.messages) { message in
+                                    transcriptBubble(
+                                        label: message.role == "user" ? "You" : "Astra",
+                                        text: message.text,
+                                        icon: message.role == "user" ? "person.fill" : "sparkles",
+                                        tint: message.role == "user" ? Color(red: 0.10, green: 0.45, blue: 0.74) : Color(red: 0.86, green: 0.38, blue: 0.18),
+                                        lineLimit: nil
+                                    )
+                                    .id(message.id)
+                                }
+                            }
 
-                ScrollView {
-                    VStack(spacing: 12) {
-                        transcriptBubble(
-                            label: "You",
-                            text: realtime.childTranscript,
-                            icon: "person.fill",
-                            tint: Color(red: 0.10, green: 0.45, blue: 0.74),
-                            lineLimit: 3
-                        )
-
-                        transcriptBubble(
-                            label: "Astra",
-                            text: realtime.astraReply,
-                            icon: "sparkles",
-                            tint: Color(red: 0.86, green: 0.38, blue: 0.18),
-                            lineLimit: nil
-                        )
+                            Color.clear
+                                .frame(height: 1)
+                                .id("voiceMessageListBottom")
+                        }
+                        .padding(.vertical, 2)
                     }
-                    .padding(.vertical, 2)
+                    .onChange(of: realtime.messages.count) { _ in
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            proxy.scrollTo("voiceMessageListBottom", anchor: .bottom)
+                        }
+                    }
                 }
 
                 callControls
-
-                Text(statusHint)
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-
-                connectionDebug
-
-                if realtime.isInCall {
-                    audioDebug
-                }
 
                 if let error = realtime.errorMessage {
                     Text(error)
@@ -123,70 +132,7 @@ struct VideoVoiceChatView: View {
             }
 
             Spacer()
-
-            Label("\(realtime.totalStars)", systemImage: "star.fill")
-                .font(.system(size: 16, weight: .bold, design: .rounded))
-                .foregroundStyle(Color(red: 0.73, green: 0.41, blue: 0.05))
-                .padding(.horizontal, 12)
-                .padding(.vertical, 9)
-                .background(Capsule().fill(Color(red: 1.0, green: 0.92, blue: 0.75)))
-                .accessibilityLabel("\(realtime.totalStars) stars")
         }
-    }
-
-    private var statusCard: some View {
-        HStack(spacing: 14) {
-            Image(systemName: voiceState.icon)
-                .font(.system(size: 20, weight: .bold))
-                .foregroundStyle(statusColor)
-                .frame(width: 44, height: 44)
-                .background(Circle().fill(statusColor.opacity(0.13)))
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(voiceState.title)
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
-                Text(statusDescription)
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-        }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(.white.opacity(0.78))
-        )
-        .animation(.spring(response: 0.25, dampingFraction: 0.84), value: voiceState)
-    }
-
-    private var voicePicker: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Label("Astra Voice", systemImage: "speaker.wave.2.fill")
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
-
-                Spacer()
-
-                Text(realtime.selectedVoice.description)
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.secondary)
-            }
-
-            Picker("Astra Voice", selection: $realtime.selectedVoice) {
-                ForEach(DoubaoVoiceOption.allCases) { voice in
-                    Text(voice.displayName).tag(voice)
-                }
-            }
-            .pickerStyle(.segmented)
-        }
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(.white.opacity(0.70))
-        )
     }
 
     private var callControls: some View {
@@ -221,90 +167,6 @@ struct VideoVoiceChatView: View {
             .disabled(!realtime.isInCall && !realtime.isStartingCall)
             .opacity(!realtime.isInCall && !realtime.isStartingCall ? 0.42 : 1)
         }
-    }
-
-    private var connectionDebug: some View {
-        HStack(spacing: 7) {
-            Circle()
-                .fill(realtime.isConnected ? Color(red: 0.13, green: 0.53, blue: 0.45) : Color(red: 0.86, green: 0.52, blue: 0.14))
-                .frame(width: 8, height: 8)
-
-            Text(realtime.currentEndpoint)
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .truncationMode(.middle)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.white.opacity(0.56))
-        )
-    }
-
-    private var audioDebug: some View {
-        HStack(spacing: 10) {
-            Text("Audio in \(realtime.audioChunksSent) / out \(realtime.audioChunksReceived)")
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundStyle(.secondary)
-
-            GeometryReader { proxy in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Color.black.opacity(0.08))
-                    Capsule()
-                        .fill(Color(red: 0.13, green: 0.53, blue: 0.45))
-                        .frame(width: max(6, proxy.size.width * realtime.inputLevel))
-                }
-            }
-            .frame(height: 8)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.white.opacity(0.56))
-        )
-    }
-
-    private var voiceState: VoiceInteractionState {
-        realtime.voiceState
-    }
-
-    private var statusColor: Color {
-        switch voiceState {
-        case .listening:
-            Color(red: 0.13, green: 0.53, blue: 0.45)
-        case .thinking:
-            Color(red: 0.86, green: 0.52, blue: 0.14)
-        case .speaking:
-            Color(red: 0.12, green: 0.45, blue: 0.78)
-        }
-    }
-
-    private var statusDescription: String {
-        switch voiceState {
-        case .listening:
-            realtime.isInCall ? "Astra can hear you now." : "Ready when you are."
-        case .thinking:
-            realtime.isStartingCall ? "Connecting the call." : "Astra is preparing a reply."
-        case .speaking:
-            "Listen, then answer back."
-        }
-    }
-
-    private var statusHint: String {
-        if realtime.isStartingCall {
-            return "Starting live call..."
-        }
-
-        if realtime.isInCall {
-            return realtime.isRecording ? "Live call is on" : "Call connected, preparing microphone"
-        }
-
-        return "Tap Start Call to begin"
     }
 
     private func transcriptBubble(label: String, text: String, icon: String, tint: Color, lineLimit: Int? = nil) -> some View {

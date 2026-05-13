@@ -11,11 +11,12 @@
 		2F4A5A2477D2590BEF2F4550 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BFA79BA3E3AA48031181C445 /* Assets.xcassets */; };
 		400CB3A902507566E6D8A28E /* AppRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4075572E9AC30169D5E1D1E /* AppRootView.swift */; };
 		6414D5F8A011C54FB4302990 /* DesignImageBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28FE0E08B3AB3B9DBA41D17 /* DesignImageBackground.swift */; };
-		AA01BCDE12345678ABCDEF02 /* MeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01BCDE12345678ABCDEF01; };
 		7D452CDEDB262B684FC0BDBA /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62993341DD2A75B0E5C44BA1 /* HomeView.swift */; };
 		910FF2A6480F7C949D3A0560 /* Pods_LingoBuddy.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A0BCD9278DA3363D4D1E2396 /* Pods_LingoBuddy.framework */; };
 		9C08FCFE8DCD9A614E01CFC2 /* SpeakView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A1FCC1AEF00745CE00EE72 /* SpeakView.swift */; };
+		A1B2C3D4E5F60718293A4B5C /* (null) in Resources */ = {isa = PBXBuildFile; };
 		A74F3C1A9B52D00100100001 /* LocalDialogStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74F3C1A9B52D00100100002 /* LocalDialogStore.swift */; };
+		AA01BCDE12345678ABCDEF02 /* MeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01BCDE12345678ABCDEF01 /* MeView.swift */; };
 		B1073205D66815E3AA8BEED2 /* LingoBuddyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B518445913F5E022D367D6 /* LingoBuddyApp.swift */; };
 		C92BB6E0F1C64C0FA7AC1731 /* VoiceRealtimeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92BB6DFF1C64C0FA7AC1731 /* VoiceRealtimeClient.swift */; };
 		E16F78E72FB037A800A9405E /* DoubaoVoiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E16F78E52FB037A800A9405E /* DoubaoVoiceClient.swift */; };
@@ -32,17 +33,18 @@
 		E172BA772FB223980066A16D /* VideoLearningService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E172BA762FB223980066A16D /* VideoLearningService.swift */; };
 		E172BA7B2FB223B20066A16D /* Quiz.swift in Sources */ = {isa = PBXBuildFile; fileRef = E172BA782FB223B20066A16D /* Quiz.swift */; };
 		E172BA7C2FB223B20066A16D /* VideoContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E172BA792FB223B20066A16D /* VideoContent.swift */; };
+		E172BA7E2FB37FCD0066A16D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E172BA7D2FB37FCD0066A16D /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		48B518445913F5E022D367D6 /* LingoBuddyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LingoBuddyApp.swift; sourceTree = "<group>"; };
-		AA01BCDE12345678ABCDEF01 /* MeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeView.swift; sourceTree = "<group>"; };
 		62993341DD2A75B0E5C44BA1 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		822996F6DEFA88EB930B4349 /* LingoBuddy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LingoBuddy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		905F2E1AF403327622466893 /* aec.model */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = aec.model; sourceTree = "<group>"; };
 		A0BCD9278DA3363D4D1E2396 /* Pods_LingoBuddy.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_LingoBuddy.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A28FE0E08B3AB3B9DBA41D17 /* DesignImageBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignImageBackground.swift; sourceTree = "<group>"; };
 		A74F3C1A9B52D00100100002 /* LocalDialogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalDialogStore.swift; sourceTree = "<group>"; };
+		AA01BCDE12345678ABCDEF01 /* MeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeView.swift; sourceTree = "<group>"; };
 		B1A1FCC1AEF00745CE00EE72 /* SpeakView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakView.swift; sourceTree = "<group>"; };
 		B652533A8F4EE4E79D8201F4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		BB8A4011BD05995B26FC34F6 /* Pods-LingoBuddy.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LingoBuddy.release.xcconfig"; path = "Target Support Files/Pods-LingoBuddy/Pods-LingoBuddy.release.xcconfig"; sourceTree = "<group>"; };
@@ -63,6 +65,7 @@
 		E172BA762FB223980066A16D /* VideoLearningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoLearningService.swift; sourceTree = "<group>"; };
 		E172BA782FB223B20066A16D /* Quiz.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Quiz.swift; sourceTree = "<group>"; };
 		E172BA792FB223B20066A16D /* VideoContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoContent.swift; sourceTree = "<group>"; };
+		E172BA7D2FB37FCD0066A16D /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		E832C2CD340C5BCF7D2EA0B4 /* Pods-LingoBuddy.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LingoBuddy.debug.xcconfig"; path = "Target Support Files/Pods-LingoBuddy/Pods-LingoBuddy.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -126,6 +129,7 @@
 		BB7595C5E23B0970029E93A0 /* LingoBuddyApp */ = {
 			isa = PBXGroup;
 			children = (
+				E172BA7D2FB37FCD0066A16D /* LaunchScreen.storyboard */,
 				E172BA7A2FB223B20066A16D /* Models */,
 				E16F78EB2FB0382D00A9405E /* Config */,
 				C4075572E9AC30169D5E1D1E /* AppRootView.swift */,
@@ -254,6 +258,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				2F4A5A2477D2590BEF2F4550 /* Assets.xcassets in Resources */,
+				E172BA7E2FB37FCD0066A16D /* LaunchScreen.storyboard in Resources */,
+				A1B2C3D4E5F60718293A4B5C /* (null) in Resources */,
 				2447215D16E68073BEB1A6E0 /* aec.model in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -348,6 +354,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = HLATLRC265;
 				INFOPLIST_FILE = LingoBuddyApp/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -433,6 +441,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = HLATLRC265;
 				INFOPLIST_FILE = LingoBuddyApp/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

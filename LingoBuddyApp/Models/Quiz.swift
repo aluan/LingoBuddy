@@ -99,3 +99,23 @@ struct QuizListResponse: Codable {
 struct ChatResponse: Codable {
     let reply: String
 }
+
+struct ChatStreamEvent: Codable {
+    let delta: String?
+    let done: Bool?
+    let conversationId: String?
+    let messageId: String?
+    let error: String?
+}
+
+struct ChatHistoryResponse: Codable {
+    let conversationId: String
+    let messages: [StoredChatMessage]
+}
+
+struct StoredChatMessage: Codable, Identifiable {
+    let id: String
+    let role: String
+    let text: String
+    let createdAt: Date?
+}

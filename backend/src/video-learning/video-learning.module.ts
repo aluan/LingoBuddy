@@ -11,12 +11,17 @@ import { BilibiliDownloaderService } from './bilibili-downloader.service';
 import { DoubaoAsrService } from './doubao-asr.service';
 import { QuizService } from './quiz.service';
 import { VideoChatService } from './video-chat.service';
+import { Conversation, ConversationSchema } from '../conversations/conversation.schema';
+import { Message, MessageSchema } from '../conversations/message.schema';
+import { ConversationsService } from '../conversations/conversations.service';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: VideoContent.name, schema: VideoContentSchema },
       { name: Quiz.name, schema: QuizSchema },
+      { name: Conversation.name, schema: ConversationSchema },
+      { name: Message.name, schema: MessageSchema },
     ]),
     BullModule.registerQueue({
       name: 'video-processing',
@@ -31,6 +36,7 @@ import { VideoChatService } from './video-chat.service';
     DoubaoAsrService,
     QuizService,
     VideoChatService,
+    ConversationsService,
   ],
   exports: [VideoLearningService],
 })

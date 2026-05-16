@@ -23,6 +23,7 @@ import { ParentService } from './parent/parent.service';
 import { VoiceSessionController } from './voice/voice-session.controller';
 import { VoiceSessionService } from './voice/voice-session.service';
 import { VideoLearningModule } from './video-learning/video-learning.module';
+import { KnowledgeModule } from './knowledge/knowledge.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { VideoLearningModule } from './video-learning/video-learning.module';
       }),
     }),
     VideoLearningModule,
+    KnowledgeModule,
   ],
   controllers: [
     ProfilesController,

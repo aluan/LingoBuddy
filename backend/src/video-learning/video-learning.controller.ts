@@ -7,14 +7,19 @@ import {
   Param,
   Logger,
   Res,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import axios from 'axios';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { VideoLearningService } from './video-learning.service';
 import { VideoProcessorService } from './video-processor.service';
 import { QuizService } from './quiz.service';
 import { VideoChatService } from './video-chat.service';
 import { ConversationsService } from '../conversations/conversations.service';
 import { MessageDocument } from '../conversations/message.schema';
+import { KnowledgeService } from '../knowledge/knowledge.service';
+import { ContentIngestService, UploadedLearningFile } from './content-ingest.service';
 
 type StreamResponse = NodeJS.WritableStream & {
   setHeader: (name: string, value: string) => void;
@@ -40,6 +45,8 @@ export class VideoLearningController {
     private readonly quizService: QuizService,
     private readonly videoChatService: VideoChatService,
     private readonly conversationsService: ConversationsService,
+    private readonly knowledgeService: KnowledgeService,
+    private readonly contentIngestService: ContentIngestService,
   ) {}
 
   @Post('submit')
@@ -89,6 +96,92 @@ export class VideoLearningController {
     };
   }
 
+
+  @Post('submit-webpage')
+  async submitWebpage(@Body() body: { url: string }) {
+    const urlMatch = body.url?.match(/https?:\/\/\S+/);
+    if (!urlMatch) {
+      throw new Error('No URL found in input');
+    }
+
+    const url = urlMatch[0].replace(/[，。；、）)】]*$/, '');
+    const page = await this.contentIngestService.fetchWebpage(url);
+    const video = await this.videoLearningService.createContent(CURRENT_PROFILE_ID, {
+      url: page.resolvedUrl,
+      videoId: this.contentIngestService.sourceIdForUrl('web', page.resolvedUrl),
+      platform: 'webpage',
+      contentType: 'webpage',
+      title: page.title,
+      duration: 0,
+      transcriptStatus: 'completed',
+      transcriptSource: 'subtitle',
+      transcriptText: page.text,
+      transcriptSegments: [{ startTime: 0, endTime: 0, text: page.text }],
+    });
+
+    return { videoId: video.id, status: 'completed' };
+  }
+
+  @Post('submit-text')
+  async submitText(@Body() body: { text: string; title?: string }) {
+    const text = body.text?.trim();
+    if (!text) {
+      throw new Error('No text found in input');
+    }
+
+    const material = this.contentIngestService.textToLearningText(text, body.title);
+    const video = await this.videoLearningService.createContent(CURRENT_PROFILE_ID, {
+      url: `text://${material.sourceId}`,
+      videoId: material.sourceId,
+      platform: 'text',
+      contentType: 'text',
+      title: material.title,
+      duration: 0,
+      transcriptStatus: 'completed',
+      transcriptSource: 'subtitle',
+      transcriptText: material.text,
+      transcriptSegments: [{ startTime: 0, endTime: 0, text: material.text }],
+    });
+
+    return { videoId: video.id, status: 'completed' };
+  }
+
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadLearningFile(
+    @UploadedFile() file: UploadedLearningFile,
+    @Body() body: { contentType?: 'image' | 'pdf' },
+  ) {
+    if (!file) {
+      throw new Error('No file uploaded');
+    }
+
+    const inferredType = file.mimetype === 'application/pdf' ? 'pdf' : 'image';
+    const contentType = body.contentType || inferredType;
+    if (contentType !== 'image' && contentType !== 'pdf') {
+      throw new Error('Unsupported upload content type');
+    }
+
+    const material = this.contentIngestService.fileToLearningText(file, contentType);
+    const video = await this.videoLearningService.createContent(CURRENT_PROFILE_ID, {
+      url: `upload://${material.sourceId}`,
+      videoId: material.sourceId,
+      platform: contentType,
+      contentType,
+      title: material.title,
+      duration: 0,
+      transcriptStatus: 'completed',
+      transcriptSource: 'subtitle',
+      transcriptText: material.text,
+      transcriptSegments: [{ startTime: 0, endTime: 0, text: material.text }],
+      fileName: file.originalname,
+      mimeType: file.mimetype,
+      fileSize: file.size,
+    });
+
+    return { videoId: video.id, status: 'completed' };
+  }
+
   @Get(':videoId/status')
   async getVideoStatus(@Param('videoId') videoId: string) {
     const video = await this.videoLearningService.findById(videoId);
@@ -120,6 +213,16 @@ export class VideoLearningController {
     return { videos };
   }
 
+  @Post(':videoId/build-knowledge')
+  async buildKnowledge(@Param('videoId') videoId: string) {
+    return this.knowledgeService.buildForVideo(CURRENT_PROFILE_ID, videoId);
+  }
+
+  @Get(':videoId/knowledge-note')
+  async getKnowledgeNote(@Param('videoId') videoId: string) {
+    return this.knowledgeService.videoKnowledge(CURRENT_PROFILE_ID, videoId);
+  }
+
   @Get(':videoId')
   async getVideo(@Param('videoId') videoId: string) {
     return this.videoLearningService.findById(videoId);
@@ -127,8 +230,12 @@ export class VideoLearningController {
 
   @Delete(':videoId')
   async deleteVideo(@Param('videoId') videoId: string) {
+    const knowledgeCleanup = await this.knowledgeService.deleteForVideo(
+      CURRENT_PROFILE_ID,
+      videoId,
+    );
     await this.videoLearningService.delete(videoId);
-    return { success: true };
+    return { success: true, knowledgeCleanup };
   }
 
   @Post(':videoId/start-session')

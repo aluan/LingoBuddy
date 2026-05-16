@@ -40,6 +40,8 @@ struct VideoTextChatView: View {
                 inputBar
             }
         }
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .tabBar)
         .task {
             await viewModel.loadMessages()
         }

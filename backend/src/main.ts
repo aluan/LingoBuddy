@@ -16,6 +16,7 @@ async function bootstrap() {
   const port = config.get<number>('PORT') ?? 3000;
   const host = config.get<string>('HOST') ?? '0.0.0.0';
 
+
   app.enableCors({
     origin: true,
     credentials: true,

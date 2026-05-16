@@ -7,6 +7,8 @@ struct VideoContent: Codable, Identifiable {
     let title: String
     let duration: Double
     let thumbnailUrl: String?
+    let contentType: String?
+    let platform: String?
     let transcriptStatus: String
     let transcriptSource: String?
     let transcriptText: String?
@@ -21,6 +23,8 @@ struct VideoContent: Codable, Identifiable {
         case title
         case duration
         case thumbnailUrl
+        case contentType
+        case platform
         case transcriptStatus
         case transcriptSource
         case transcriptText

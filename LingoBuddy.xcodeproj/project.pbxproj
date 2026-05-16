@@ -14,7 +14,7 @@
 		7D452CDEDB262B684FC0BDBA /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62993341DD2A75B0E5C44BA1 /* HomeView.swift */; };
 		910FF2A6480F7C949D3A0560 /* Pods_LingoBuddy.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A0BCD9278DA3363D4D1E2396 /* Pods_LingoBuddy.framework */; };
 		9C08FCFE8DCD9A614E01CFC2 /* SpeakView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A1FCC1AEF00745CE00EE72 /* SpeakView.swift */; };
-		A1B2C3D4E5F60718293A4B5C /* (null) in Resources */ = {isa = PBXBuildFile; };
+		A1B2C3D4E5F60718293A4B5C /* BuildFile in Resources */ = {isa = PBXBuildFile; };
 		A74F3C1A9B52D00100100001 /* LocalDialogStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74F3C1A9B52D00100100002 /* LocalDialogStore.swift */; };
 		AA01BCDE12345678ABCDEF02 /* MeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01BCDE12345678ABCDEF01 /* MeView.swift */; };
 		B1073205D66815E3AA8BEED2 /* LingoBuddyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B518445913F5E022D367D6 /* LingoBuddyApp.swift */; };
@@ -34,7 +34,39 @@
 		E172BA7B2FB223B20066A16D /* Quiz.swift in Sources */ = {isa = PBXBuildFile; fileRef = E172BA782FB223B20066A16D /* Quiz.swift */; };
 		E172BA7C2FB223B20066A16D /* VideoContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E172BA792FB223B20066A16D /* VideoContent.swift */; };
 		E172BA7E2FB37FCD0066A16D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E172BA7D2FB37FCD0066A16D /* LaunchScreen.storyboard */; };
+		F10000000000000000000001 /* KnowledgeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000002 /* KnowledgeModels.swift */; };
+		F10000000000000000000003 /* KnowledgeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000004 /* KnowledgeService.swift */; };
+		F10000000000000000000005 /* KnowledgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000006 /* KnowledgeView.swift */; };
+		F10000000000000000000007 /* KnowledgeGraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000008 /* KnowledgeGraphView.swift */; };
+		F20000000000000000000002 /* SharedImportStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000001 /* SharedImportStore.swift */; };
+		F20000000000000000000004 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000003 /* ShareViewController.swift */; };
+		F20000000000000000000005 /* SharedImportStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000001 /* SharedImportStore.swift */; };
+		F2000000000000000000000A /* LingoBuddyShareExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = F20000000000000000000009 /* LingoBuddyShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		F20000000000000000000014 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6E1775197CBC8DE2C3798C06 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F2000000000000000000000E;
+			remoteInfo = LingoBuddyShareExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		F20000000000000000000012 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				F2000000000000000000000A /* LingoBuddyShareExtension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		48B518445913F5E022D367D6 /* LingoBuddyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LingoBuddyApp.swift; sourceTree = "<group>"; };
@@ -67,6 +99,16 @@
 		E172BA792FB223B20066A16D /* VideoContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoContent.swift; sourceTree = "<group>"; };
 		E172BA7D2FB37FCD0066A16D /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		E832C2CD340C5BCF7D2EA0B4 /* Pods-LingoBuddy.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LingoBuddy.debug.xcconfig"; path = "Target Support Files/Pods-LingoBuddy/Pods-LingoBuddy.debug.xcconfig"; sourceTree = "<group>"; };
+		F10000000000000000000002 /* KnowledgeModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnowledgeModels.swift; sourceTree = "<group>"; };
+		F10000000000000000000004 /* KnowledgeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnowledgeService.swift; sourceTree = "<group>"; };
+		F10000000000000000000006 /* KnowledgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnowledgeView.swift; sourceTree = "<group>"; };
+		F10000000000000000000008 /* KnowledgeGraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnowledgeGraphView.swift; sourceTree = "<group>"; };
+		F20000000000000000000001 /* SharedImportStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedImportStore.swift; sourceTree = "<group>"; };
+		F20000000000000000000003 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		F20000000000000000000006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		F20000000000000000000007 /* LingoBuddy.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LingoBuddy.entitlements; sourceTree = "<group>"; };
+		F20000000000000000000008 /* LingoBuddyShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LingoBuddyShareExtension.entitlements; sourceTree = "<group>"; };
+		F20000000000000000000009 /* LingoBuddyShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LingoBuddyShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,6 +117,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				910FF2A6480F7C949D3A0560 /* Pods_LingoBuddy.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F2000000000000000000000D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -106,6 +155,8 @@
 				AA01BCDE12345678ABCDEF01 /* MeView.swift */,
 				62993341DD2A75B0E5C44BA1 /* HomeView.swift */,
 				B1A1FCC1AEF00745CE00EE72 /* SpeakView.swift */,
+				F10000000000000000000006 /* KnowledgeView.swift */,
+				F10000000000000000000008 /* KnowledgeGraphView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -122,6 +173,7 @@
 			isa = PBXGroup;
 			children = (
 				822996F6DEFA88EB930B4349 /* LingoBuddy.app */,
+				F20000000000000000000009 /* LingoBuddyShareExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -135,6 +187,7 @@
 				C4075572E9AC30169D5E1D1E /* AppRootView.swift */,
 				BFA79BA3E3AA48031181C445 /* Assets.xcassets */,
 				B652533A8F4EE4E79D8201F4 /* Info.plist */,
+				F20000000000000000000007 /* LingoBuddy.entitlements */,
 				48B518445913F5E022D367D6 /* LingoBuddyApp.swift */,
 				C92BB6E1F1C64C0FA7AC1731 /* Services */,
 				8470825A9FBEF672C4F99E7D /* Views */,
@@ -150,6 +203,7 @@
 				E16F78E52FB037A800A9405E /* DoubaoVoiceClient.swift */,
 				A74F3C1A9B52D00100100002 /* LocalDialogStore.swift */,
 				E16F78E62FB037A800A9405E /* VoiceSessionService.swift */,
+				F10000000000000000000004 /* KnowledgeService.swift */,
 				C92BB6DFF1C64C0FA7AC1731 /* VoiceRealtimeClient.swift */,
 			);
 			path = Services;
@@ -183,14 +237,35 @@
 			children = (
 				E172BA782FB223B20066A16D /* Quiz.swift */,
 				E172BA792FB223B20066A16D /* VideoContent.swift */,
+				F10000000000000000000002 /* KnowledgeModels.swift */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		F20000000000000000000015 /* LingoBuddyShareExtension */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000000000000003 /* ShareViewController.swift */,
+				F20000000000000000000006 /* Info.plist */,
+				F20000000000000000000008 /* LingoBuddyShareExtension.entitlements */,
+			);
+			path = LingoBuddyShareExtension;
+			sourceTree = "<group>";
+		};
+		F20000000000000000000016 /* LingoBuddyShared */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000000000000001 /* SharedImportStore.swift */,
+			);
+			path = LingoBuddyShared;
 			sourceTree = "<group>";
 		};
 		FF0509CBFE242B3B2A2F0767 = {
 			isa = PBXGroup;
 			children = (
 				BB7595C5E23B0970029E93A0 /* LingoBuddyApp */,
+				F20000000000000000000016 /* LingoBuddyShared */,
+				F20000000000000000000015 /* LingoBuddyShareExtension */,
 				B709BFDFC3DECA396F5FB54B /* Products */,
 				25408D843E22D1C77BA0F816 /* Pods */,
 				3B3783D8DBB1665B552841B2 /* Frameworks */,
@@ -208,16 +283,35 @@
 				C6AB5D147149B57B6347866D /* Sources */,
 				D5CA8767BE32CD14D17FC836 /* Resources */,
 				53F037E3662A6705E44D2869 /* Frameworks */,
+				F20000000000000000000012 /* Embed App Extensions */,
 				9DC4F0C67AA054A711DDFE95 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				F20000000000000000000013 /* PBXTargetDependency */,
 			);
 			name = LingoBuddy;
 			productName = LingoBuddy;
 			productReference = 822996F6DEFA88EB930B4349 /* LingoBuddy.app */;
 			productType = "com.apple.product-type.application";
+		};
+		F2000000000000000000000E /* LingoBuddyShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F2000000000000000000000F /* Build configuration list for PBXNativeTarget "LingoBuddyShareExtension" */;
+			buildPhases = (
+				F2000000000000000000000B /* Sources */,
+				F2000000000000000000000C /* Resources */,
+				F2000000000000000000000D /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LingoBuddyShareExtension;
+			productName = LingoBuddyShareExtension;
+			productReference = F20000000000000000000009 /* LingoBuddyShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -229,6 +323,9 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					3E4A0D881B81B7244669297E = {
+						ProvisioningStyle = Automatic;
+					};
+					F2000000000000000000000E = {
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -248,6 +345,7 @@
 			projectRoot = "";
 			targets = (
 				3E4A0D881B81B7244669297E /* LingoBuddy */,
+				F2000000000000000000000E /* LingoBuddyShareExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -259,8 +357,15 @@
 			files = (
 				2F4A5A2477D2590BEF2F4550 /* Assets.xcassets in Resources */,
 				E172BA7E2FB37FCD0066A16D /* LaunchScreen.storyboard in Resources */,
-				A1B2C3D4E5F60718293A4B5C /* (null) in Resources */,
+				A1B2C3D4E5F60718293A4B5C /* BuildFile in Resources */,
 				2447215D16E68073BEB1A6E0 /* aec.model in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F2000000000000000000000C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -297,13 +402,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-LingoBuddy/Pods-LingoBuddy-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-LingoBuddy/Pods-LingoBuddy-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -339,10 +440,32 @@
 				E172BA772FB223980066A16D /* VideoLearningService.swift in Sources */,
 				9C08FCFE8DCD9A614E01CFC2 /* SpeakView.swift in Sources */,
 				C92BB6E0F1C64C0FA7AC1731 /* VoiceRealtimeClient.swift in Sources */,
+				F10000000000000000000001 /* KnowledgeModels.swift in Sources */,
+				F10000000000000000000003 /* KnowledgeService.swift in Sources */,
+				F10000000000000000000005 /* KnowledgeView.swift in Sources */,
+				F10000000000000000000007 /* KnowledgeGraphView.swift in Sources */,
+				F20000000000000000000002 /* SharedImportStore.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F2000000000000000000000B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F20000000000000000000004 /* ShareViewController.swift in Sources */,
+				F20000000000000000000005 /* SharedImportStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		F20000000000000000000013 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F2000000000000000000000E /* LingoBuddyShareExtension */;
+			targetProxy = F20000000000000000000014 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		01A0CED9CFF64F7793F09918 /* Debug */ = {
@@ -350,6 +473,7 @@
 			baseConfigurationReference = E832C2CD340C5BCF7D2EA0B4 /* Pods-LingoBuddy.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = LingoBuddyApp/LingoBuddy.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = HLATLRC265;
@@ -512,6 +636,48 @@
 			};
 			name = Release;
 		};
+		F20000000000000000000010 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = LingoBuddyShareExtension/LingoBuddyShareExtension.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = HLATLRC265;
+				INFOPLIST_FILE = LingoBuddyShareExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.aluan.LingoBuddys.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		F20000000000000000000011 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = LingoBuddyShareExtension/LingoBuddyShareExtension.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = HLATLRC265;
+				INFOPLIST_FILE = LingoBuddyShareExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.aluan.LingoBuddys.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -529,6 +695,15 @@
 			buildConfigurations = (
 				38D254A54E0896B962BAF0CF /* Debug */,
 				C9A6455271E745E0C87A1F67 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F2000000000000000000000F /* Build configuration list for PBXNativeTarget "LingoBuddyShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F20000000000000000000010 /* Debug */,
+				F20000000000000000000011 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

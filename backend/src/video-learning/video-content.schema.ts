@@ -20,6 +20,9 @@ export class VideoContent {
   @Prop({ required: true, default: 'bilibili' })
   platform: string;
 
+  @Prop({ required: true, default: 'video' })
+  contentType: 'video' | 'webpage' | 'text' | 'image' | 'pdf';
+
   @Prop({ required: true })
   videoId: string;
 
@@ -31,6 +34,15 @@ export class VideoContent {
 
   @Prop()
   thumbnailUrl?: string;
+
+  @Prop()
+  fileName?: string;
+
+  @Prop()
+  mimeType?: string;
+
+  @Prop()
+  fileSize?: number;
 
   // Transcript/Subtitle
   @Prop({ required: true, default: 'pending' })

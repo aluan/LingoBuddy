@@ -98,6 +98,8 @@ struct VideoVoiceChatView: View {
             .padding(.top, 12)
             .padding(.bottom, 26)
         }
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .tabBar)
         .onAppear {
             // Start call with video context
             realtime.startCall(videoContext: videoContext)

@@ -50,6 +50,96 @@ final class VideoLearningService: ObservableObject {
         return result.videoId
     }
 
+
+
+    func submitWebpage(url: String) async throws -> String {
+        let endpoint = URL(string: "\(baseURL)/video-learning/submit-webpage")!
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(["url": url])
+
+        let (data, response) = try await BackendURLSession.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw VideoLearningError.invalidResponse
+        }
+
+        let result = try JSONDecoder().decode(VideoSubmitResponse.self, from: data)
+        return result.videoId
+    }
+
+
+    func submitText(text: String, title: String? = nil) async throws -> String {
+        let endpoint = URL(string: "\(baseURL)/video-learning/submit-text")!
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        var body = ["text": text]
+        if let title, !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            body["title"] = title
+        }
+        request.httpBody = try JSONEncoder().encode(body)
+
+        let (data, response) = try await BackendURLSession.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw VideoLearningError.invalidResponse
+        }
+
+        let result = try JSONDecoder().decode(VideoSubmitResponse.self, from: data)
+        return result.videoId
+    }
+
+    func uploadLearningFile(data: Data, fileName: String, mimeType: String, contentType: String) async throws -> String {
+        let endpoint = URL(string: "\(baseURL)/video-learning/upload")!
+        let boundary = "Boundary-\(UUID().uuidString)"
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        request.httpBody = multipartBody(
+            boundary: boundary,
+            fields: ["contentType": contentType],
+            fileField: "file",
+            fileName: fileName,
+            mimeType: mimeType,
+            fileData: data
+        )
+
+        let (responseData, response) = try await BackendURLSession.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw VideoLearningError.invalidResponse
+        }
+
+        let result = try JSONDecoder().decode(VideoSubmitResponse.self, from: responseData)
+        return result.videoId
+    }
+
+    private func multipartBody(
+        boundary: String,
+        fields: [String: String],
+        fileField: String,
+        fileName: String,
+        mimeType: String,
+        fileData: Data
+    ) -> Data {
+        var data = Data()
+        for (key, value) in fields {
+            data.appendString("--\(boundary)\r\n")
+            data.appendString("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n")
+            data.appendString("\(value)\r\n")
+        }
+        data.appendString("--\(boundary)\r\n")
+        data.appendString("Content-Disposition: form-data; name=\"\(fileField)\"; filename=\"\(fileName)\"\r\n")
+        data.appendString("Content-Type: \(mimeType)\r\n\r\n")
+        data.append(fileData)
+        data.appendString("\r\n")
+        data.appendString("--\(boundary)--\r\n")
+        return data
+    }
+
     func fetchVideoStatus(videoId: String) async throws -> VideoStatus {
         let endpoint = URL(string: "\(baseURL)/video-learning/\(videoId)/status")!
         var request = URLRequest(url: endpoint)
@@ -263,5 +353,12 @@ enum VideoLearningError: LocalizedError {
         case .serverError(let message):
             return message
         }
+    }
+}
+
+
+private extension Data {
+    mutating func appendString(_ string: String) {
+        append(Data(string.utf8))
     }
 }

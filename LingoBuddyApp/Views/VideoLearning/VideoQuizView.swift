@@ -36,6 +36,8 @@ struct VideoQuizView: View {
                 }
             }
         }
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .tabBar)
         .sheet(isPresented: $showResult) {
             if let result = viewModel.quizResult, let quiz = viewModel.quiz {
                 QuizResultView(result: result, quiz: quiz, onDismiss: {

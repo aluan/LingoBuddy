@@ -2,6 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.aluan.LingoBuddys</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>lingobuddy</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
@@ -49,6 +60,14 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>LingoBuddy uses the camera to add learning materials from photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>LingoBuddy lets you choose photos as English learning materials.</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>lingobuddy</string>
 	</array>
 </dict>
 </plist>

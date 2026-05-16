@@ -8,7 +8,11 @@ struct VideoDetailView: View {
     @State private var showTextChat = false
     @State private var showVoiceChat = false
     @State private var showQuiz = false
-    @State private var isTranscriptExpanded = false
+    @State private var knowledgeNodes: [KnowledgeNode] = []
+    @State private var isBuildingKnowledge = false
+    @State private var knowledgeMessage: String?
+    @State private var selectedKnowledgeNode: KnowledgeNode?
+    @StateObject private var knowledgeService = KnowledgeService()
     @State private var showDeleteConfirmation = false
 
     private let pageGradient = LinearGradient(
@@ -24,84 +28,43 @@ struct VideoDetailView: View {
         ZStack {
             pageGradient.ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                ScrollView {
-                    VStack(spacing: 20) {
-                        topBar
+            navigationLinks
 
-                        if video.thumbnailUrl != nil {
-                            thumbnailHero
-                        }
-
-                        videoInfoCard
-
-                        transcriptSection
+            ScrollView {
+                VStack(spacing: 20) {
+                    if video.thumbnailUrl != nil {
+                        thumbnailHero
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 12)
-                    .padding(.bottom, 20)
+
+                    videoInfoCard
+
+                    summarySection
+
+                    knowledgeSection
+
+                    actionButtons
                 }
-
-                actionButtons
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 26)
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
+                .padding(.bottom, 28)
             }
         }
-        .sheet(isPresented: $showTextChat) {
-            VideoTextChatView(
-                videoId: video.id,
-                videoContext: video.transcriptText ?? "",
-                onBack: { showTextChat = false }
-            )
-        }
-        .sheet(isPresented: $showVoiceChat) {
-            VideoVoiceChatView(
-                videoId: video.id,
-                videoTitle: video.title,
-                videoContext: video.transcriptText ?? "",
-                onBack: { showVoiceChat = false }
-            )
-        }
-        .sheet(isPresented: $showQuiz) {
-            VideoQuizView(
-                videoId: video.id,
-                onBack: { showQuiz = false }
-            )
-        }
-    }
-
-    private var topBar: some View {
-        HStack(spacing: 12) {
-            Button(action: onBack) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
-                    .frame(width: 42, height: 42)
-                    .background(Circle().fill(.white.opacity(0.78)))
-            }
-            .buttonStyle(.plain)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Video Details")
-                    .font(.system(size: 23, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
-            }
-
-            Spacer()
-
+        .navigationTitle("Video Details")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.visible, for: .navigationBar)
+        .toolbar(.hidden, for: .tabBar)
+        .toolbar {
             if onDelete != nil {
-                Menu {
-                    Button(role: .destructive, action: {
-                        showDeleteConfirmation = true
-                    }) {
-                        Label("Delete Video", systemImage: "trash")
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Button(role: .destructive, action: {
+                            showDeleteConfirmation = true
+                        }) {
+                            Label("Delete Video", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
                     }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
-                        .frame(width: 42, height: 42)
-                        .background(Circle().fill(.white.opacity(0.78)))
                 }
             }
         }
@@ -112,6 +75,67 @@ struct VideoDetailView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("This action cannot be undone.")
+        }
+        .task {
+            await loadVideoKnowledge()
+        }
+    }
+
+    private var navigationLinks: some View {
+        Group {
+            NavigationLink(
+                destination: VideoTextChatView(
+                    videoId: video.id,
+                    videoContext: video.transcriptText ?? "",
+                    onBack: { showTextChat = false }
+                )
+                .navigationBarBackButtonHidden(true),
+                isActive: $showTextChat
+            ) {
+                EmptyView()
+            }
+            .hidden()
+
+            NavigationLink(
+                destination: VideoVoiceChatView(
+                    videoId: video.id,
+                    videoTitle: video.title,
+                    videoContext: video.transcriptText ?? "",
+                    onBack: { showVoiceChat = false }
+                )
+                .navigationBarBackButtonHidden(true),
+                isActive: $showVoiceChat
+            ) {
+                EmptyView()
+            }
+            .hidden()
+
+            NavigationLink(
+                destination: VideoQuizView(
+                    videoId: video.id,
+                    onBack: { showQuiz = false }
+                )
+                .navigationBarBackButtonHidden(true),
+                isActive: $showQuiz
+            ) {
+                EmptyView()
+            }
+            .hidden()
+
+            NavigationLink(
+                destination: Group {
+                    if let node = selectedKnowledgeNode {
+                        KnowledgeNodeDetailView(nodeId: node.id, initialNode: node)
+                    }
+                },
+                isActive: Binding(
+                    get: { selectedKnowledgeNode != nil },
+                    set: { if !$0 { selectedKnowledgeNode = nil } }
+                )
+            ) {
+                EmptyView()
+            }
+            .hidden()
         }
     }
 
@@ -197,35 +221,31 @@ struct VideoDetailView: View {
         )
     }
 
-    private var transcriptSection: some View {
+    private var summarySection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Transcript")
-                .font(.system(size: 16, weight: .bold, design: .rounded))
-                .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
-
-            if let transcript = video.transcriptText, !transcript.isEmpty {
-                Text(transcript)
-                    .font(.system(size: 14, weight: .regular, design: .rounded))
+            HStack(spacing: 8) {
+                Image(systemName: "text.quote")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(Color(red: 0.13, green: 0.53, blue: 0.45))
+                Text("Summary")
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
                     .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
-                    .lineLimit(isTranscriptExpanded ? nil : 8)
+            }
+
+            if let summary = videoSummaryText {
+                Text(summary)
+                    .font(.system(size: 16, weight: .regular, design: .rounded))
+                    .lineSpacing(5)
+                    .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                Button(action: {
-                    withAnimation(.easeInOut(duration: 0.25)) {
-                        isTranscriptExpanded.toggle()
-                    }
-                }) {
-                    HStack(spacing: 4) {
-                        Text(isTranscriptExpanded ? "Show less" : "Show more")
-                            .font(.system(size: 14, weight: .semibold, design: .rounded))
-                        Image(systemName: isTranscriptExpanded ? "chevron.up" : "chevron.down")
-                            .font(.system(size: 12, weight: .bold))
-                    }
-                    .foregroundStyle(Color(red: 0.13, green: 0.53, blue: 0.45))
+                if let source = video.transcriptSource {
+                    Label("Generated from \(source.capitalized)", systemImage: "sparkles")
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.secondary)
                 }
-                .buttonStyle(.plain)
             } else {
-                Text("No transcript available")
+                Text(video.transcriptStatus == "completed" ? "No summary available yet." : "Summary will be available after the transcript is ready.")
                     .font(.system(size: 14, weight: .regular, design: .rounded))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -236,6 +256,154 @@ struct VideoDetailView: View {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(.white.opacity(0.78))
         )
+    }
+
+    private var videoSummaryText: String? {
+        guard let transcript = video.transcriptText?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !transcript.isEmpty else { return nil }
+        return Self.makeSummary(from: transcript)
+    }
+
+    private static func makeSummary(from transcript: String) -> String {
+        let normalized = transcript
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard normalized.count > 760 else { return normalized }
+
+        let rawSentences = normalized
+            .components(separatedBy: CharacterSet(charactersIn: "。！？.!?\n"))
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { $0.count >= 12 }
+
+        guard !rawSentences.isEmpty else {
+            return String(normalized.prefix(720)).trimmingCharacters(in: .whitespacesAndNewlines) + "…"
+        }
+
+        let stopWords: Set<String> = [
+            "the", "and", "that", "this", "with", "from", "have", "will", "your", "you", "are", "for", "but", "not", "was", "were", "they", "their", "what", "when", "where", "who", "how", "why", "can", "about", "into", "just", "like", "because", "所以", "然后", "这个", "那个", "我们", "你们", "他们", "就是", "一个", "一些"
+        ]
+
+        var frequencies: [String: Int] = [:]
+        for token in normalized.lowercased().components(separatedBy: CharacterSet.alphanumerics.inverted).filter({ $0.count > 2 && !stopWords.contains($0) }) {
+            frequencies[token, default: 0] += 1
+        }
+
+        let scored = rawSentences.enumerated().map { index, sentence -> (index: Int, sentence: String, score: Double) in
+            let tokens = sentence.lowercased().components(separatedBy: CharacterSet.alphanumerics.inverted).filter { $0.count > 2 && !stopWords.contains($0) }
+            let keywordScore = tokens.reduce(0) { $0 + frequencies[$1, default: 0] }
+            let positionBoost = index < 3 ? 3 : max(0, 2 - index / 6)
+            let lengthPenalty = sentence.count > 180 ? -2 : 0
+            return (index, sentence, Double(keywordScore + positionBoost + lengthPenalty))
+        }
+
+        let selected = scored
+            .sorted { lhs, rhs in
+                if lhs.score == rhs.score { return lhs.index < rhs.index }
+                return lhs.score > rhs.score
+            }
+            .sorted { $0.index < $1.index }
+            .map(\.sentence)
+
+        var summary = ""
+        for sentence in selected {
+            let candidate = summary.isEmpty ? sentence : "\(summary)。\(sentence)"
+            if candidate.count > 760 { break }
+            summary = candidate
+        }
+
+        if summary.isEmpty {
+            summary = String(normalized.prefix(720)).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        if !summary.hasSuffix("。"), !summary.hasSuffix(".") {
+            summary += normalized.contains("。") || normalized.contains("，") ? "。" : "."
+        }
+        return summary
+    }
+
+    private var knowledgeSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Knowledge Map")
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color(red: 0.12, green: 0.19, blue: 0.24))
+
+                Spacer()
+
+                Button {
+                    Task { await buildKnowledge() }
+                } label: {
+                    HStack(spacing: 6) {
+                        if isBuildingKnowledge {
+                            ProgressView()
+                                .scaleEffect(0.78)
+                        } else {
+                            Image(systemName: "sparkles")
+                        }
+                        Text(isBuildingKnowledge ? "Building" : "Build")
+                    }
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color(red: 0.13, green: 0.53, blue: 0.45))
+                }
+                .buttonStyle(.plain)
+                .disabled(isBuildingKnowledge || video.transcriptStatus != "completed")
+            }
+
+            if let knowledgeMessage {
+                Text(knowledgeMessage)
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
+
+            if knowledgeNodes.isEmpty {
+                Text(video.transcriptStatus == "completed" ? "Build this video into vocabulary, sentences, questions, and mistakes." : "Knowledge can be built after transcript is ready.")
+                    .font(.system(size: 14, weight: .regular, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                VStack(spacing: 10) {
+                    ForEach(knowledgeNodes.prefix(8)) { node in
+                        Button {
+                            selectedKnowledgeNode = node
+                        } label: {
+                            KnowledgeNodeRow(node: node)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(.white.opacity(0.78))
+        )
+    }
+
+    private func buildKnowledge() async {
+        guard video.transcriptStatus == "completed" else {
+            knowledgeMessage = "Transcript is not ready yet."
+            return
+        }
+        isBuildingKnowledge = true
+        knowledgeMessage = nil
+        do {
+            let response = try await knowledgeService.buildVideoKnowledge(videoId: video.id)
+            knowledgeNodes = response.nodes
+            knowledgeMessage = "Built \(response.created.vocabulary) words, \(response.created.sentences) sentences, \(response.created.questions) questions, and \(response.created.mistakes) mistakes."
+        } catch {
+            knowledgeMessage = error.localizedDescription
+        }
+        isBuildingKnowledge = false
+    }
+
+    private func loadVideoKnowledge() async {
+        do {
+            knowledgeNodes = try await knowledgeService.fetchVideoKnowledge(videoId: video.id)
+        } catch {
+            // Keep this quiet; the user can still build knowledge manually.
+        }
     }
 
     private var actionButtons: some View {
@@ -259,6 +427,13 @@ struct VideoDetailView: View {
                 icon: "checkmark.circle.fill",
                 color: Color(red: 0.86, green: 0.38, blue: 0.18),
                 action: { showQuiz = true }
+            )
+
+            CompactActionButton(
+                title: "Knowledge",
+                icon: "circle.hexagongrid.fill",
+                color: Color(red: 0.48, green: 0.33, blue: 0.78),
+                action: { Task { await buildKnowledge() } }
             )
         }
     }
@@ -390,6 +565,8 @@ struct StatCard: View {
             title: "Sample Video",
             duration: 300,
             thumbnailUrl: nil,
+            contentType: "video",
+            platform: "bilibili",
             transcriptStatus: "completed",
             transcriptSource: "subtitle",
             transcriptText: "This is a sample transcript...",

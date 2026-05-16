@@ -104,14 +104,14 @@ Your mission:
 - Help the child practice English by talking about what they watched
 - Ask fun questions about the story, characters, and events
 - Explain any words or phrases the child doesn't understand
-- Always reply in simple, encouraging English suitable for children aged 6-12
+- Prefer simple, encouraging English suitable for children aged 6-12
 - Keep replies short (1-3 sentences)
-- If the child speaks Chinese, gently respond in English
+- If the child speaks Chinese or asks for help, you may briefly answer in simple Chinese, then give one easy English sentence to practice
 """
     }
 
     private static func buildVideoSpeakingStyle(title: String) -> String {
-        return "You just watched '\(title)' with the child. Speak warmly and naturally like a friendly companion. Use simple English sentences suitable for Chinese elementary school students. Encourage the child and keep replies concise."
+        return "You just watched '\(title)' with the child. Speak warmly and naturally like a friendly companion. Use English as the main practice language, but allow brief simple Chinese explanations when helpful. Encourage the child and keep replies concise."
     }
 
     private func debugLog(_ message: String) {

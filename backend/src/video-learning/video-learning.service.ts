@@ -16,17 +16,44 @@ export class VideoLearningService {
   ) {}
 
   async create(profileId: string, url: string, videoId: string) {
-    const video = await this.videoContentModel.create({
-      profileId: new Types.ObjectId(profileId),
+    return this.createContent(profileId, {
       url,
       videoId,
       platform: 'bilibili',
+      contentType: 'video',
       title: 'Processing...',
       duration: 0,
       transcriptStatus: 'pending',
     });
+  }
 
-    this.logger.log(`Created video content: ${video.id}`);
+  async createContent(
+    profileId: string,
+    data: {
+      url: string;
+      videoId: string;
+      platform: string;
+      contentType: 'video' | 'webpage' | 'text' | 'image' | 'pdf';
+      title: string;
+      duration?: number;
+      transcriptStatus: 'pending' | 'processing' | 'completed' | 'failed';
+      transcriptSource?: 'subtitle' | 'asr';
+      transcriptText?: string;
+      transcriptSegments?: any[];
+      transcriptError?: string;
+      thumbnailUrl?: string;
+      fileName?: string;
+      mimeType?: string;
+      fileSize?: number;
+    },
+  ) {
+    const video = await this.videoContentModel.create({
+      profileId: new Types.ObjectId(profileId),
+      duration: 0,
+      ...data,
+    });
+
+    this.logger.log(`Created learning content: ${video.id}, type: ${data.contentType}`);
     return video;
   }
 

@@ -11,9 +11,13 @@ import { BilibiliDownloaderService } from './bilibili-downloader.service';
 import { DoubaoAsrService } from './doubao-asr.service';
 import { QuizService } from './quiz.service';
 import { VideoChatService } from './video-chat.service';
+import { ContentIngestService } from './content-ingest.service';
 import { Conversation, ConversationSchema } from '../conversations/conversation.schema';
 import { Message, MessageSchema } from '../conversations/message.schema';
 import { ConversationsService } from '../conversations/conversations.service';
+import { KnowledgeService } from '../knowledge/knowledge.service';
+import { KnowledgeNode, KnowledgeNodeSchema } from '../knowledge/knowledge-node.schema';
+import { KnowledgeLink, KnowledgeLinkSchema } from '../knowledge/knowledge-link.schema';
 
 @Module({
   imports: [
@@ -22,6 +26,8 @@ import { ConversationsService } from '../conversations/conversations.service';
       { name: Quiz.name, schema: QuizSchema },
       { name: Conversation.name, schema: ConversationSchema },
       { name: Message.name, schema: MessageSchema },
+      { name: KnowledgeNode.name, schema: KnowledgeNodeSchema },
+      { name: KnowledgeLink.name, schema: KnowledgeLinkSchema },
     ]),
     BullModule.registerQueue({
       name: 'video-processing',
@@ -36,7 +42,9 @@ import { ConversationsService } from '../conversations/conversations.service';
     DoubaoAsrService,
     QuizService,
     VideoChatService,
+    ContentIngestService,
     ConversationsService,
+    KnowledgeService,
   ],
   exports: [VideoLearningService],
 })
